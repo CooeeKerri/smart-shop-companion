@@ -227,7 +227,7 @@ const Dashboard = () => {
             </div>
             <div className="flex-1">
               <h2 className="font-display font-semibold">Back from the shops?</h2>
-              <p className="text-sm text-muted-foreground">Scan your docket — we'll handle the rest</p>
+              <p className="text-sm text-muted-foreground">Scan your docket — we'll sort the rest</p>
             </div>
             <Button size="sm" onClick={() => navigate('/scan')}>
               Scan <ArrowRight className="ml-1 h-3 w-3" />

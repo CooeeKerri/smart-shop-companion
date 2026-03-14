@@ -646,18 +646,51 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
     }
   }
 
-  // Calculate overall confidence
+  // ── Granular confidence scores ──
   const confidences = items.map((i: any) => i.confidence);
-  const avgConfidence = confidences.length > 0
+  const avgItemConfidence = confidences.length > 0
     ? confidences.reduce((a: number, b: number) => a + b, 0) / confidences.length
     : 0;
 
-  let overallConfidence = avgConfidence;
+  // Date confidence
+  const dateConfidence = parsed.receipt_date ? 0.95 : 0.0;
+
+  // Total confidence: how well do items add up to the stated total?
+  let totalConfidence = 0.5;
   if (statedTotal !== null) {
     const totalDiffPct = Math.abs(calcTotal - statedTotal) / Math.max(statedTotal, 1);
-    if (totalDiffPct < 0.01) overallConfidence = Math.min(overallConfidence + 0.1, 1.0);
-    else if (totalDiffPct > 0.1) overallConfidence = Math.max(overallConfidence - 0.2, 0.1);
+    if (totalDiffPct < 0.01) totalConfidence = 1.0;
+    else if (totalDiffPct < 0.05) totalConfidence = 0.8;
+    else if (totalDiffPct < 0.1) totalConfidence = 0.6;
+    else totalConfidence = 0.3;
   }
+
+  // Store confidence comes from storeDetection
+  const storeConf = storeDetection.store_confidence;
+
+  // Items with low confidence
+  const lowConfItemCount = items.filter((i: any) => i.confidence < 0.5).length;
+  const itemExtractionConfidence = items.length > 0
+    ? Math.max(0.1, avgItemConfidence - (lowConfItemCount / items.length) * 0.2)
+    : 0.1;
+
+  // Overall confidence: weighted average of all dimensions
+  let overallConfidence = (
+    storeConf * 0.15 +
+    dateConfidence * 0.1 +
+    itemExtractionConfidence * 0.45 +
+    totalConfidence * 0.3
+  );
+  overallConfidence = Math.round(overallConfidence * 100) / 100;
+
+  // ── Review threshold: if ANY dimension is weak, require review ──
+  const REVIEW_THRESHOLD = 0.6;
+  const needsReview = overallConfidence < 0.75 ||
+    storeConf < REVIEW_THRESHOLD ||
+    totalConfidence < REVIEW_THRESHOLD ||
+    lowConfItemCount > 0 ||
+    dateConfidence < REVIEW_THRESHOLD ||
+    warnings.length > 0;
 
   const nonDiscountTotal = items
     .filter((i: any) => !i.is_discount)
@@ -673,11 +706,15 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
     detected_abn: storeDetection.detected_abn,
     receipt_date: parsed.receipt_date || null,
     receipt_time: parsed.receipt_time || null,
+    date_confidence: dateConfidence,
+    total_confidence: totalConfidence,
+    item_extraction_confidence: itemExtractionConfidence,
     items,
     subtotal: parsed.subtotal || nonDiscountTotal,
     total_discounts: parsed.total_discounts || discountTotal,
     total: statedTotal || calcTotal,
-    overall_confidence: Math.round(overallConfidence * 100) / 100,
+    overall_confidence: overallConfidence,
+    needs_review: needsReview,
     warnings,
   };
 }

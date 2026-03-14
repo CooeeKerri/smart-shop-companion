@@ -185,6 +185,7 @@ export type Database = {
           created_at: string
           health_score: number | null
           id: string
+          image_paths: string[] | null
           image_url: string | null
           meal_potential_score: number | null
           raw_ocr_text: string | null
@@ -201,6 +202,7 @@ export type Database = {
           created_at?: string
           health_score?: number | null
           id?: string
+          image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
           raw_ocr_text?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           created_at?: string
           health_score?: number | null
           id?: string
+          image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
           raw_ocr_text?: string | null

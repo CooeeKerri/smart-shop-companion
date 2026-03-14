@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Store, Calendar, ChevronDown, ChevronUp, Trash2, Loader2, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import ReceiptImageViewer from '@/components/ReceiptImageViewer';
 
 interface ReceiptItem {
   id: string;
@@ -305,6 +306,7 @@ const ReceiptReview = () => {
 
               {isExpanded && (
                 <CardContent className="space-y-3">
+                  <ReceiptImageViewer receiptId={docket.id} />
                   {docket.items.map((item) => (
                     <div
                       key={item.id}

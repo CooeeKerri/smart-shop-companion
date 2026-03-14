@@ -17,6 +17,7 @@ interface ReceiptItem {
   price: number;
   quantity: number;
   is_discount: boolean;
+  is_food: boolean;
 }
 
 interface Docket {
@@ -68,6 +69,7 @@ const ReceiptReview = () => {
               price: Number(item.price) || 0,
               quantity: item.quantity || 1,
               is_discount: item.is_discount || false,
+              is_food: (item as any).is_food !== undefined ? (item as any).is_food : true,
             })),
           });
         }
@@ -243,10 +245,13 @@ const ReceiptReview = () => {
                           onChange={(e) => updateItem(docket.id, item.id, 'clean_name', e.target.value)}
                           className="h-8 text-sm font-medium border-0 bg-transparent px-0 focus-visible:ring-0"
                         />
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex gap-1 mt-1 flex-wrap">
                           <Badge variant="secondary" className="text-xs">{item.category}</Badge>
                           {item.is_discount && (
-                            <Badge variant="outline" className="text-xs text-green-600">Discount</Badge>
+                            <Badge variant="outline" className="text-xs text-destructive">Discount</Badge>
+                          )}
+                          {!item.is_food && (
+                            <Badge variant="outline" className="text-xs">Non-food</Badge>
                           )}
                         </div>
                       </div>

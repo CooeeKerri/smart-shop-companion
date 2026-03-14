@@ -30,14 +30,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Verify user
+    const userClient = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await userClient.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -45,59 +47,96 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { receipt_id } = await req.json();
-    if (!receipt_id) {
-      return new Response(JSON.stringify({ error: "receipt_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Get receipt record
-    const { data: receipt, error: receiptError } = await supabase
-      .from("receipts")
-      .select("*")
-      .eq("id", receipt_id)
-      .single();
-
-    if (receiptError || !receipt) {
+    const { receipt_id, image_paths } = await req.json();
+    if (!receipt_id || !image_paths || !Array.isArray(image_paths) || image_paths.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Receipt not found" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "receipt_id and image_paths[] required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Download image from storage
-    const imagePath = receipt.image_url;
-    const { data: imageData, error: downloadError } = await supabase.storage
-      .from("receipts")
-      .download(imagePath);
+    // Download all images and convert to base64
+    const imageContents: { url: string; base64: string; mimeType: string }[] = [];
 
-    if (downloadError || !imageData) {
+    for (const path of image_paths) {
+      const { data: imageData, error: downloadError } = await supabase.storage
+        .from("receipts")
+        .download(path);
+
+      if (downloadError || !imageData) {
+        console.error(`Failed to download ${path}:`, downloadError);
+        continue;
+      }
+
+      const arrayBuffer = await imageData.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      const base64 = btoa(binary);
+      const mimeType = imageData.type || "image/jpeg";
+
+      imageContents.push({ url: path, base64, mimeType });
+    }
+
+    if (imageContents.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Could not download image" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Could not download any images" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Convert to base64 (chunked to avoid stack overflow)
-    const arrayBuffer = await imageData.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = "";
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-    }
-    const base64 = btoa(binary);
-    const mimeType = imageData.type || "image/jpeg";
+    // Build message content with all images
+    const messageContent: any[] = imageContents.map((img) => ({
+      type: "image_url",
+      image_url: {
+        url: `data:${img.mimeType};base64,${img.base64}`,
+      },
+    }));
 
-    // Call Lovable AI Gateway with vision to extract receipt items
+    messageContent.push({
+      type: "text",
+      text: `You are an Australian grocery receipt OCR system. You are given ${imageContents.length} image(s) that may be PARTS OF THE SAME RECEIPT (a long docket photographed in sections) or separate dockets from the same shopping trip.
+
+CRITICAL RULES:
+1. DETERMINE if images are parts of the same receipt by looking for:
+   - Overlapping items between images
+   - Same store branding/header/footer
+   - Sequential item numbering
+   - Matching subtotals or running totals
+2. DEDUPLICATE items that appear in multiple images (overlapping sections)
+3. Classify each item as food or non-food:
+   - Food: groceries, drinks, fresh produce, meat, dairy, bakery, pantry items, frozen food, snacks, baby food
+   - Non-food: cleaning products, toiletries, pet supplies, stationery, clothing, kitchenware, bags, gift cards
+
+Return a JSON object (no markdown fences, raw JSON only):
+{
+  "store_name": "Store name from the receipt",
+  "items": [
+    {
+      "raw_name": "Exact text from receipt",
+      "clean_name": "Human-readable product name",
+      "category": "One of: Fresh Produce, Meat, Dairy, Bakery, Pantry, Frozen, Drinks, Snacks, Household, Health & Beauty, Pet, Baby, Other",
+      "price": 3.50,
+      "quantity": 1,
+      "is_discount": false,
+      "is_food": true
+    }
+  ],
+  "total": 45.60
+}
+
+Rules:
+- Include ALL unique items across all images (no duplicates from overlapping photos)
+- If an item is a discount/savings line, set is_discount to true and make price negative
+- Quantity should reflect multiples if shown (e.g., "2 @ $3.50" = quantity 2, price 3.50)
+- clean_name should be a short, clear product name without codes or abbreviations
+- Set is_food to false for non-food items like cleaning products, bags, toiletries, pet supplies`,
+    });
+
+    // Call Lovable AI Gateway
     const aiResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -111,41 +150,7 @@ Deno.serve(async (req) => {
           messages: [
             {
               role: "user",
-              content: [
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${mimeType};base64,${base64}`,
-                  },
-                },
-                {
-                  type: "text",
-                  text: `You are an Australian grocery receipt OCR system. Extract all items from this receipt image.
-
-Return a JSON object with this exact structure (no markdown, no code fences, just raw JSON):
-{
-  "store_name": "Store name from the receipt",
-  "items": [
-    {
-      "raw_name": "Exact text from receipt",
-      "clean_name": "Human-readable product name",
-      "category": "One of: Fresh Produce, Meat, Dairy, Bakery, Pantry, Frozen, Drinks, Snacks, Household, Health & Beauty, Other",
-      "price": 3.50,
-      "quantity": 1,
-      "is_discount": false
-    }
-  ],
-  "total": 45.60
-}
-
-Rules:
-- Include ALL items on the receipt
-- If an item is a discount/savings line, set is_discount to true and make price negative
-- Quantity should reflect multiples if shown (e.g., "2 @ $3.50" = quantity 2, price 3.50)
-- Use Australian grocery categories
-- clean_name should be a short, clear product name without codes or abbreviations`,
-                },
-              ],
+              content: messageContent,
             },
           ],
           temperature: 0.1,
@@ -155,13 +160,24 @@ Rules:
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      console.error("AI Gateway error:", errText);
+      console.error("AI Gateway error:", aiResponse.status, errText);
+
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add credits." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ error: "AI processing failed" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -171,17 +187,13 @@ Rules:
     // Parse the JSON from AI response
     let parsed;
     try {
-      // Strip markdown fences if present
       const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(cleaned);
     } catch (e) {
       console.error("Failed to parse AI response:", content);
       return new Response(
         JSON.stringify({ error: "Failed to parse receipt data", raw: content }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -198,14 +210,7 @@ Rules:
 
     // Insert receipt items
     const itemsToInsert = (parsed.items || []).map(
-      (item: {
-        raw_name?: string;
-        clean_name?: string;
-        category?: string;
-        price?: number;
-        quantity?: number;
-        is_discount?: boolean;
-      }) => ({
+      (item: any) => ({
         receipt_id,
         raw_name: item.raw_name || "",
         clean_name: item.clean_name || item.raw_name || "",
@@ -213,6 +218,7 @@ Rules:
         price: item.price || 0,
         quantity: item.quantity || 1,
         is_discount: item.is_discount || false,
+        is_food: item.is_food !== undefined ? item.is_food : true,
       })
     );
 
@@ -232,21 +238,17 @@ Rules:
         receipt_id,
         store_name: parsed.store_name,
         item_count: itemsToInsert.length,
+        food_items: itemsToInsert.filter((i: any) => i.is_food).length,
+        non_food_items: itemsToInsert.filter((i: any) => !i.is_food).length,
         total: parsed.total,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("Unexpected error:", err);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

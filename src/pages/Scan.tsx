@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Camera, Upload, FileText, X, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-interface ScannedDocket {
+interface ScannedImage {
   id: string;
   file: File;
   preview: string;
@@ -20,7 +20,7 @@ const Scan = () => {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [dockets, setDockets] = useState<ScannedDocket[]>([]);
+  const [images, setImages] = useState<ScannedImage[]>([]);
   const [processing, setProcessing] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +28,7 @@ const Scan = () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
-      setDockets((prev) => [
+      setImages((prev) => [
         ...prev,
         { id: crypto.randomUUID(), file, preview: reader.result as string },
       ]);
@@ -37,71 +37,72 @@ const Scan = () => {
     e.target.value = '';
   };
 
-  const removeDocket = (id: string) => {
-    setDockets((prev) => prev.filter((d) => d.id !== id));
+  const removeImage = (id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
   const handleProceed = async () => {
-    if (!user || dockets.length === 0) return;
+    if (!user || images.length === 0) return;
     setProcessing(true);
 
     try {
-      const receiptIds: string[] = [];
+      // 1. Create ONE receipt record for the whole docket
+      const { data: receipt, error: receiptError } = await supabase
+        .from('receipts')
+        .insert({ user_id: user.id, status: 'pending' })
+        .select('id')
+        .single();
 
-      for (const docket of dockets) {
-        // 1. Create receipt record
-        const { data: receipt, error: receiptError } = await supabase
-          .from('receipts')
-          .insert({ user_id: user.id, status: 'pending' })
-          .select('id')
-          .single();
+      if (receiptError || !receipt) {
+        throw new Error('Failed to create receipt record');
+      }
 
-        if (receiptError || !receipt) {
-          throw new Error('Failed to create receipt record');
-        }
+      // 2. Upload all images to storage
+      const imagePaths: string[] = [];
 
-        // 2. Upload image to storage
-        const ext = docket.file.name.split('.').pop() || 'jpg';
-        const storagePath = `${user.id}/${receipt.id}.${ext}`;
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const ext = img.file.name.split('.').pop() || 'jpg';
+        const storagePath = `${user.id}/${receipt.id}_${i + 1}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from('receipts')
-          .upload(storagePath, docket.file);
+          .upload(storagePath, img.file);
 
         if (uploadError) {
-          throw new Error(`Failed to upload image: ${uploadError.message}`);
+          throw new Error(`Failed to upload image ${i + 1}: ${uploadError.message}`);
         }
 
-        // 3. Update receipt with image path
-        await supabase
-          .from('receipts')
-          .update({ image_url: storagePath })
-          .eq('id', receipt.id);
-
-        // 4. Call OCR edge function
-        const { data: ocrResult, error: ocrError } = await supabase.functions.invoke(
-          'process-receipt',
-          { body: { receipt_id: receipt.id } }
-        );
-
-        if (ocrError) {
-          console.error('OCR error:', ocrError);
-          toast({
-            title: 'OCR warning',
-            description: `Docket ${receiptIds.length + 1} may need manual review`,
-            variant: 'destructive',
-          });
-        }
-
-        receiptIds.push(receipt.id);
+        imagePaths.push(storagePath);
       }
 
-      // Navigate to review with all receipt IDs
-      navigate('/review', { state: { receiptIds } });
+      // 3. Update receipt with first image path
+      await supabase
+        .from('receipts')
+        .update({ image_url: imagePaths[0] })
+        .eq('id', receipt.id);
+
+      // 4. Call OCR edge function with ALL images at once
+      const { data: ocrResult, error: ocrError } = await supabase.functions.invoke(
+        'process-receipt',
+        { body: { receipt_id: receipt.id, image_paths: imagePaths } }
+      );
+
+      if (ocrError) {
+        console.error('OCR error:', ocrError);
+        toast({
+          title: 'OCR warning',
+          description: 'Some items may need manual review',
+          variant: 'destructive',
+        });
+      }
+
+      // Navigate to review with receipt ID
+      navigate('/review', { state: { receiptIds: [receipt.id] } });
     } catch (err: any) {
       console.error('Processing error:', err);
       toast({
-        title: 'Error processing receipts',
+        title: 'Error processing receipt',
         description: err.message || 'Something went wrong',
         variant: 'destructive',
       });
@@ -113,39 +114,43 @@ const Scan = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Scan receipts</h1>
+        <h1 className="font-display text-2xl font-bold">Scan your docket</h1>
         <p className="text-sm text-muted-foreground">
-          Add all dockets from this shopping trip
+          Long receipt? Add multiple photos — we'll merge them automatically
         </p>
       </div>
 
       <div className="px-4 space-y-4">
-        {/* Scanned dockets grid */}
-        {dockets.length > 0 && (
+        {/* Uploaded images grid */}
+        {images.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-display font-semibold text-sm">Dockets added</h2>
-              <Badge variant="secondary" className="font-mono">{dockets.length}</Badge>
+              <h2 className="font-display font-semibold text-sm">
+                Photos of this docket
+              </h2>
+              <Badge variant="secondary" className="font-mono">
+                {images.length} {images.length === 1 ? 'photo' : 'photos'}
+              </Badge>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {dockets.map((docket, idx) => (
-                <Card key={docket.id} className="relative overflow-hidden">
-                  <CardContent className="p-2">
+            <div className="grid grid-cols-3 gap-2">
+              {images.map((img, idx) => (
+                <Card key={img.id} className="relative overflow-hidden">
+                  <CardContent className="p-1.5">
                     <div className="relative">
                       <img
-                        src={docket.preview}
-                        alt={`Receipt ${idx + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        src={img.preview}
+                        alt={`Receipt section ${idx + 1}`}
+                        className="w-full h-28 object-cover rounded-lg"
                       />
                       <button
-                        onClick={() => removeDocket(docket.id)}
+                        onClick={() => removeImage(img.id)}
                         className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"
                         disabled={processing}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
-                      <Badge className="absolute bottom-1 left-1 text-xs" variant="secondary">
-                        #{idx + 1}
+                      <Badge className="absolute bottom-1 left-1 text-[10px]" variant="secondary">
+                        {idx + 1}/{images.length}
                       </Badge>
                     </div>
                   </CardContent>
@@ -155,12 +160,12 @@ const Scan = () => {
           </div>
         )}
 
-        {/* Add docket options */}
+        {/* Add image options */}
         {!processing && (
           <div className="space-y-3">
-            {dockets.length > 0 && (
+            {images.length > 0 && (
               <h2 className="font-display font-semibold text-sm text-muted-foreground">
-                Add another docket
+                Add more sections of the receipt
               </h2>
             )}
             <div className="grid grid-cols-2 gap-3">
@@ -191,14 +196,14 @@ const Scan = () => {
         )}
 
         {/* Tips */}
-        {dockets.length === 0 && (
+        {images.length === 0 && (
           <div className="rounded-xl bg-muted p-4 space-y-2">
-            <p className="text-sm font-medium">📸 Tips for best results:</p>
+            <p className="text-sm font-medium">📸 Tips for long receipts:</p>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Lay the receipt flat on a contrasting surface</li>
-              <li>• Make sure all text is in focus</li>
-              <li>• Include the full receipt from store name to total</li>
-              <li>• Avoid shadows across the text</li>
+              <li>• Photo each section with some overlap between shots</li>
+              <li>• We'll automatically merge and remove duplicates</li>
+              <li>• Include the store header and the total at the bottom</li>
+              <li>• Lay the receipt flat and avoid shadows</li>
             </ul>
           </div>
         )}
@@ -209,9 +214,9 @@ const Scan = () => {
             <CardContent className="flex flex-col items-center gap-3 p-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <div className="text-center">
-                <p className="font-display font-semibold">Processing dockets…</p>
+                <p className="font-display font-semibold">Reading your receipt…</p>
                 <p className="text-sm text-muted-foreground">
-                  AI is reading your receipts. This may take a moment.
+                  AI is merging {images.length} {images.length === 1 ? 'photo' : 'photos'} and extracting items
                 </p>
               </div>
             </CardContent>
@@ -219,10 +224,10 @@ const Scan = () => {
         )}
 
         {/* Proceed button */}
-        {dockets.length > 0 && !processing && (
+        {images.length > 0 && !processing && (
           <Button className="w-full font-semibold" size="lg" onClick={handleProceed}>
             <FileText className="mr-2 h-4 w-4" />
-            Process {dockets.length} {dockets.length === 1 ? 'docket' : 'dockets'}
+            Process receipt ({images.length} {images.length === 1 ? 'photo' : 'photos'})
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         )}

@@ -216,6 +216,9 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* Eat Soon — waste risk alert */}
+        <EatSoonAlert />
+
         {/* Scan CTA */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-sm">
           <CardContent className="flex items-center gap-4 p-5">

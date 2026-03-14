@@ -1,0 +1,1 @@
+ALTER TABLE public.receipt_items ADD COLUMN IF NOT EXISTS ingredient_keyword text DEFAULT NULL;

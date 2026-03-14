@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
+import SmartInsight from '@/components/SmartInsight';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,8 @@ const scores = [
 
 const Analysis = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const receiptIds: string[] = (location.state as any)?.receiptIds ?? [];
 
   return (
     <AppLayout>
@@ -24,6 +27,8 @@ const Analysis = () => {
       </div>
 
       <div className="px-4 space-y-4">
+        {/* Smart Insight — 1 simple takeaway */}
+        <SmartInsight receiptIds={receiptIds} />
         {/* Score cards */}
         <div className="grid grid-cols-2 gap-3">
           {scores.map(({ icon: Icon, label, score, color }) => (

@@ -170,6 +170,41 @@ const Dashboard = () => {
       </div>
 
       <div className="px-4 space-y-4">
+        {/* What Should I Cook? */}
+        <Button
+          className="w-full h-16 text-lg font-display font-bold gap-3 shadow-lg shadow-primary/20"
+          size="lg"
+          onClick={askWhatToCook}
+          disabled={cookingLoading}
+        >
+          {cookingLoading ? (
+            <><Loader2 className="h-6 w-6 animate-spin" /> Thinking…</>
+          ) : (
+            <><Sparkles className="h-6 w-6" /> What Should I Cook?</>
+          )}
+        </Button>
+
+        {/* Cooking suggestion */}
+        {cookingSuggestion && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent animate-fade-in">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-display text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4 text-primary" /> Tonight's ideas
+                </span>
+                <button onClick={() => setCookingSuggestion(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none dark:prose-invert text-sm [&>p]:mb-2 [&>ul]:mb-2">
+                <ReactMarkdown>{cookingSuggestion}</ReactMarkdown>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Scan CTA */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-sm">
           <CardContent className="flex items-center gap-4 p-5">

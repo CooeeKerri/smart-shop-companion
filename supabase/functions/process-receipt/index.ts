@@ -708,6 +708,7 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
     receipt_id: receiptId,
     raw_name: item.raw_name,
     clean_name: item.clean_name,
+    ingredient_keyword: item.ingredient_keyword,
     category: item.category,
     price: item.price,
     quantity: item.quantity,

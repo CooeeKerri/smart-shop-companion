@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/make-or-buy" element={<MakeOrBuy />} />
             <Route path="/impulse-insights" element={<ImpulseInsights />} />
             <Route path="/price-comparison" element={<PriceComparison />} />
+            <Route path="/specials" element={<Specials />} />
             <Route path="/premium" element={<Premium />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

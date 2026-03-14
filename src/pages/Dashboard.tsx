@@ -170,6 +170,7 @@ const Dashboard = () => {
               { icon: Package, label: 'Pantry', path: '/pantry' },
               { icon: Calculator, label: 'Make or Buy', path: '/make-or-buy' },
               { icon: Zap, label: 'Impulse', path: '/impulse-insights' },
+              { icon: Tag, label: 'Specials', path: '/specials' },
             ].map(({ icon: Icon, label, path }) => (
               <Card
                 key={path}

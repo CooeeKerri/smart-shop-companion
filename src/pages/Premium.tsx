@@ -118,6 +118,7 @@ const Premium = () => {
               { label: 'Make or Buy', path: '/make-or-buy', icon: Calculator },
               { label: 'Impulse Insights', path: '/impulse-insights', icon: Zap },
               { label: 'Price Comparison', path: '/price-comparison', icon: ArrowLeftRight },
+              { label: 'Specials & Catalogues', path: '/specials', icon: Tag },
               { label: 'Party Planner', path: '/occasion-chat', icon: PartyPopper },
               { label: 'Budget Mate', path: '/budget-chat', icon: Bot },
             ].map(({ label, path, icon: Icon }) => (

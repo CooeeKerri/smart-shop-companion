@@ -21,6 +21,8 @@ interface FrequentItem {
   total_qty: number;
   purchase_count: number;
   avg_price: number;
+  last_price: number | null;
+  price_alert: boolean; // last price > avg price (not on special)
   last_purchased: string;
   days_since_last: number;
   avg_days_between: number | null;

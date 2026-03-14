@@ -96,6 +96,8 @@ const ReceiptReview = () => {
           loaded.push({
             id,
             storeName: r.store_name || 'Unknown Store',
+            storeConfidence: (r as any).store_confidence ?? null,
+            storeReviewRequired: (r as any).store_review_required ?? false,
             totalAmount: r.total_amount,
             overallConfidence: (r as any).overall_confidence ?? null,
             warnings,

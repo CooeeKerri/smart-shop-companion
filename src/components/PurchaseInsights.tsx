@@ -188,12 +188,12 @@ const PurchaseInsights = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Restock due
+              Time to restock
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground mb-3">
-              Based on your purchase patterns, these items may need restocking
+              Reckon you might be running low on these based on your usual shops
             </p>
             <div className="flex flex-wrap gap-2">
               {restockItems.slice(0, 8).map((item) => (

@@ -6,12 +6,13 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat, Tag } from 'lucide-react';
+import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat, Tag, Loader2, Sparkles, X } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
 import RegularStores from '@/components/RegularStores';
 import CategoryBreakdown from '@/components/CategoryBreakdown';
 import { toast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
+import ReactMarkdown from 'react-markdown';
 
 interface ReceiptSummary {
   id: string;

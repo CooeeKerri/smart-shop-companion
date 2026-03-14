@@ -306,6 +306,7 @@ const ReceiptReview = () => {
 
               {isExpanded && (
                 <CardContent className="space-y-3">
+                  <ReceiptImageViewer receiptId={docket.id} />
                   {docket.items.map((item) => (
                     <div
                       key={item.id}

@@ -275,9 +275,7 @@ const ShopHistory = () => {
                             navigate('/review', { state: { receiptIds: [receipt.id] } })
                           }
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                            <Store className="h-5 w-5 text-muted-foreground" />
-                          </div>
+                          <ReceiptImageViewer receiptId={receipt.id} compact />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">
                               {receipt.store_name || 'Unknown Store'}

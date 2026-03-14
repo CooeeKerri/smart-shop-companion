@@ -1,11 +1,11 @@
-import { Home, Camera, UtensilsCrossed, History, Bot } from 'lucide-react';
+import { Home, Camera, Crown, UtensilsCrossed, History } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/dashboard' },
   { icon: Camera, label: 'Scan', path: '/scan' },
-  { icon: Bot, label: 'Budget', path: '/budget-chat' },
+  { icon: Crown, label: 'Premium', path: '/premium' },
   { icon: UtensilsCrossed, label: 'Meals', path: '/meals' },
   { icon: History, label: 'History', path: '/history' },
 ];

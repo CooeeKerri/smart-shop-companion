@@ -16,6 +16,12 @@ import ShopHistory from "./pages/ShopHistory";
 import Account from "./pages/Account";
 import BudgetChat from "./pages/BudgetChat";
 import OccasionChat from "./pages/OccasionChat";
+import MealPlanner from "./pages/MealPlanner";
+import Pantry from "./pages/Pantry";
+import MakeOrBuy from "./pages/MakeOrBuy";
+import ImpulseInsights from "./pages/ImpulseInsights";
+import PriceComparison from "./pages/PriceComparison";
+import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +46,12 @@ const App = () => (
             <Route path="/account" element={<Account />} />
             <Route path="/budget-chat" element={<BudgetChat />} />
             <Route path="/occasion-chat" element={<OccasionChat />} />
+            <Route path="/meal-planner" element={<MealPlanner />} />
+            <Route path="/pantry" element={<Pantry />} />
+            <Route path="/make-or-buy" element={<MakeOrBuy />} />
+            <Route path="/impulse-insights" element={<ImpulseInsights />} />
+            <Route path="/price-comparison" element={<PriceComparison />} />
+            <Route path="/premium" element={<Premium />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

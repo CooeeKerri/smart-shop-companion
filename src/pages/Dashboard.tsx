@@ -6,7 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock } from 'lucide-react';
+import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
 import RegularStores from '@/components/RegularStores';
 import CategoryBreakdown from '@/components/CategoryBreakdown';
@@ -154,38 +154,38 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* AI Assistants */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card
-            className={`cursor-pointer transition-colors ${isPremium ? 'hover:bg-muted/50' : 'opacity-75'}`}
-            onClick={() => isPremium ? navigate('/budget-chat') : toast({ title: 'Premium feature', description: 'Upgrade to access Budget Mate AI assistant.' })}
-          >
-            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 relative">
-                <Bot className="h-5 w-5 text-primary" />
-                {!isPremium && <Lock className="h-3 w-3 text-muted-foreground absolute -bottom-0.5 -right-0.5" />}
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Budget Mate</p>
-                <p className="text-xs text-muted-foreground">{isPremium ? 'Grocery budget help' : 'Premium feature'}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer transition-colors ${isPremium ? 'hover:bg-muted/50' : 'opacity-75'}`}
-            onClick={() => isPremium ? navigate('/occasion-chat') : toast({ title: 'Premium feature', description: 'Upgrade to access Party Planner AI assistant.' })}
-          >
-            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 relative">
-                <PartyPopper className="h-5 w-5 text-primary" />
-                {!isPremium && <Lock className="h-3 w-3 text-muted-foreground absolute -bottom-0.5 -right-0.5" />}
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Party Planner</p>
-                <p className="text-xs text-muted-foreground">{isPremium ? 'Special occasion ideas' : 'Premium feature'}</p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Premium Features Grid */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-display font-semibold text-sm">Premium Tools</h2>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => navigate('/premium')}>
+              {isPremium ? 'View all' : 'Upgrade'} <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Bot, label: 'Budget Mate', path: '/budget-chat' },
+              { icon: PartyPopper, label: 'Party Planner', path: '/occasion-chat' },
+              { icon: Calendar, label: 'Meal Planner', path: '/meal-planner' },
+              { icon: Package, label: 'Pantry', path: '/pantry' },
+              { icon: Calculator, label: 'Make or Buy', path: '/make-or-buy' },
+              { icon: Zap, label: 'Impulse', path: '/impulse-insights' },
+            ].map(({ icon: Icon, label, path }) => (
+              <Card
+                key={path}
+                className={`cursor-pointer transition-colors ${isPremium ? 'hover:bg-muted/50' : 'opacity-75'}`}
+                onClick={() => isPremium ? navigate(path) : navigate('/premium')}
+              >
+                <CardContent className="p-3 flex flex-col items-center text-center gap-1.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 relative">
+                    <Icon className="h-4 w-4 text-primary" />
+                    {!isPremium && <Lock className="h-2.5 w-2.5 text-muted-foreground absolute -bottom-0.5 -right-0.5" />}
+                  </div>
+                  <p className="text-[11px] font-medium leading-tight">{label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         {/* Scan usage for free users */}
@@ -200,7 +200,7 @@ const Dashboard = () => {
                 <Badge variant={scansRemaining > 0 ? 'secondary' : 'destructive'}>
                   {scansRemaining}/{scanLimit}
                 </Badge>
-                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: 'Coming soon!', description: 'Premium subscriptions will be available shortly.' })}>
+                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => navigate('/premium')}>
                   <Crown className="h-3 w-3 mr-1" /> Upgrade
                 </Button>
               </div>

@@ -188,12 +188,12 @@ const PurchaseInsights = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 font-display text-base">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Restock due
+              Time to restock
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground mb-3">
-              Based on your purchase patterns, these items may need restocking
+              Reckon you might be running low on these based on your usual shops
             </p>
             <div className="flex flex-wrap gap-2">
               {restockItems.slice(0, 8).map((item) => (
@@ -225,7 +225,7 @@ const PurchaseInsights = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground mb-3">
-              These regulars cost more than usual — they may not be on special
+              These regulars cost more than usual — might not be on special right now
             </p>
             <div className="flex flex-wrap gap-2">
               {items.filter((i) => i.price_alert).slice(0, 8).map((item) => (
@@ -252,7 +252,7 @@ const PurchaseInsights = () => {
           <CardTitle className="flex items-center justify-between font-display text-base">
             <div className="flex items-center gap-2">
               <ShoppingBasket className="h-4 w-4 text-primary" />
-              Most purchased items
+              Your regulars
             </div>
             <Badge variant="secondary" className="text-xs font-mono">
               {items.length} items tracked

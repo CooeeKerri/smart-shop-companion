@@ -229,6 +229,13 @@ const Scan = () => {
         <p className="text-sm text-muted-foreground">
           Add photos of one or more receipts — we'll process them all together
         </p>
+        {!isPremium && !subLoading && (
+          <div className="mt-2 flex items-center gap-2">
+            <Badge variant={scansRemaining > 0 ? 'secondary' : 'destructive'} className="text-xs">
+              {scansRemaining}/{scanLimit} scans left this week
+            </Badge>
+          </div>
+        )}
       </div>
 
       <div className="px-4 space-y-4">

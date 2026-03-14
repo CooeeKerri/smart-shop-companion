@@ -91,8 +91,11 @@ Deno.serve(async (req) => {
 
     const parsed = extractionResult.data!;
 
+    // ── PASS 1.5: Store detection & validation ──
+    const storeDetection = detectStore(parsed);
+
     // ── PASS 2: Validation & confidence scoring ──
-    const validated = validateReceipt(parsed);
+    const validated = validateReceipt(parsed, storeDetection);
 
     // Save to database
     await saveReceipt(supabase, receipt_id, validated);

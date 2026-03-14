@@ -637,6 +637,9 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
     .from("receipts")
     .update({
       store_name: data.store_name,
+      store_confidence: data.store_confidence,
+      store_review_required: data.store_review_required,
+      detected_abn: data.detected_abn,
       total_amount: data.total,
       subtotal: data.subtotal,
       total_discounts: data.total_discounts,

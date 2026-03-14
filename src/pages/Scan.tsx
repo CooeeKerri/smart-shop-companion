@@ -228,6 +228,44 @@ const Scan = () => {
           </div>
         )}
 
+        {/* Pending / unconfirmed dockets */}
+        {pendingReceipts.length > 0 && !processing && (
+          <div className="space-y-2">
+            <h2 className="font-display font-semibold text-sm text-muted-foreground">
+              Pending dockets
+            </h2>
+            {pendingReceipts.map((r) => (
+              <Card key={r.id}>
+                <CardContent className="flex items-center justify-between p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {r.store_name || 'Unknown Store'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString()} · {r.status}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/review', { state: { receiptIds: [r.id] } })}
+                    >
+                      Review
+                    </Button>
+                    <button
+                      onClick={() => deletePendingReceipt(r.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
         {/* Tips */}
         {images.length === 0 && (
           <div className="rounded-xl bg-muted p-4 space-y-2">

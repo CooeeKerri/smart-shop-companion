@@ -25,22 +25,22 @@ interface Docket {
 const mockDockets: Docket[] = [
   {
     id: '1',
-    storeName: 'Woolworths',
+    storeName: 'Coles',
     items: [
-      { id: 1, name: 'Woolworths Milk 2L', category: 'Dairy', price: 3.50, quantity: 1 },
-      { id: 2, name: 'Tip Top Bread White', category: 'Bakery', price: 3.80, quantity: 1 },
-      { id: 3, name: 'Chicken Breast 500g', category: 'Meat', price: 9.00, quantity: 1 },
-      { id: 4, name: 'Broccoli', category: 'Fresh Produce', price: 3.50, quantity: 1 },
-      { id: 5, name: 'Barilla Pasta 500g', category: 'Pantry', price: 2.00, quantity: 2 },
+      { id: 1, name: 'Coles Full Cream Milk 2L', category: 'Dairy', price: 3.10, quantity: 1 },
+      { id: 2, name: 'Coles Bakery Sourdough', category: 'Bakery', price: 4.50, quantity: 1 },
+      { id: 3, name: 'RSPCA Chicken Breast 500g', category: 'Meat', price: 9.50, quantity: 1 },
+      { id: 4, name: 'Broccoli Bunch', category: 'Fresh Produce', price: 3.90, quantity: 1 },
+      { id: 5, name: 'San Remo Spaghetti 500g', category: 'Pantry', price: 1.95, quantity: 2 },
     ],
   },
   {
     id: '2',
     storeName: 'Coles',
     items: [
-      { id: 6, name: 'Passata 700ml', category: 'Pantry', price: 1.80, quantity: 1 },
-      { id: 7, name: 'Cheddar Cheese 250g', category: 'Dairy', price: 4.50, quantity: 1 },
-      { id: 8, name: 'Bananas 1kg', category: 'Fresh Produce', price: 3.90, quantity: 1 },
+      { id: 6, name: 'Mutti Passata 700ml', category: 'Pantry', price: 3.00, quantity: 1 },
+      { id: 7, name: 'Coles Tasty Cheese 250g', category: 'Dairy', price: 4.30, quantity: 1 },
+      { id: 8, name: 'Cavendish Bananas 1kg', category: 'Fresh Produce', price: 3.90, quantity: 1 },
     ],
   },
 ];

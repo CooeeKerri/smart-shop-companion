@@ -61,6 +61,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── PASS 0: Server-side quality gate ──
+    const qualityCheck = await runQualityCheck(imageContents, LOVABLE_API_KEY);
+    if (!qualityCheck.ok) {
+      // Update receipt status so user knows to re-scan
+      await supabase
+        .from("receipts")
+        .update({ status: "rejected", raw_ocr_text: JSON.stringify({ rejection: qualityCheck.reason }) })
+        .eq("id", receipt_id);
+
+      return new Response(
+        JSON.stringify({
+          error: "image_quality",
+          message: qualityCheck.reason,
+          rejected: true,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // ── PASS 1: Extract all data ──
     const extractionResult = await runExtraction(imageContents, LOVABLE_API_KEY);
     if (!extractionResult.ok) {

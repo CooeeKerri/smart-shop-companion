@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/history" element={<ShopHistory />} />
             <Route path="/account" element={<Account />} />
             <Route path="/budget-chat" element={<BudgetChat />} />
+            <Route path="/occasion-chat" element={<OccasionChat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -81,6 +81,7 @@ const PurchaseInsights = () => {
           totalQty: number;
           totalSpent: number;
           dates: string[];
+          prices: { date: string; price: number; isDiscount: boolean }[];
         }
       > = {};
 

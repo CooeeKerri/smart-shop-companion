@@ -101,6 +101,23 @@ const ReceiptReview = () => {
     });
   };
 
+  const removeDocket = async (docketId: string) => {
+    try {
+      // Delete items first, then receipt
+      await supabase.from('receipt_items').delete().eq('receipt_id', docketId);
+      await supabase.from('receipts').delete().eq('id', docketId);
+      setDockets((prev) => prev.filter((d) => d.id !== docketId));
+      toast({ title: 'Docket removed' });
+      // If no dockets left, go back to scan
+      if (dockets.length <= 1) {
+        navigate('/scan');
+      }
+    } catch (err) {
+      console.error('Delete docket error:', err);
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
+
   const updateItem = async (docketId: string, itemId: string, field: string, value: string | number) => {
     setDockets((prev) =>
       prev.map((d) =>

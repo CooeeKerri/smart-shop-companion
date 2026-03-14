@@ -133,6 +133,54 @@ const ReceiptReview = () => {
     );
   };
 
+  const CATEGORIES = [
+    'Fresh Produce', 'Meat & Seafood', 'Dairy', 'Bakery', 'Pantry',
+    'Frozen', 'Drinks', 'Snacks', 'Household', 'Health & Beauty',
+    'Pet', 'Baby', 'Deli', 'Other',
+  ];
+
+  const addItem = async (docketId: string) => {
+    const { data, error } = await supabase
+      .from('receipt_items')
+      .insert({
+        receipt_id: docketId,
+        clean_name: 'New item',
+        raw_name: '',
+        category: 'Other',
+        price: 0,
+        quantity: 1,
+        is_discount: false,
+        is_food: true,
+      })
+      .select()
+      .single();
+
+    if (error || !data) return;
+
+    setDockets((prev) =>
+      prev.map((d) =>
+        d.id === docketId
+          ? {
+              ...d,
+              items: [
+                ...d.items,
+                {
+                  id: data.id,
+                  clean_name: data.clean_name || 'New item',
+                  raw_name: data.raw_name || '',
+                  category: data.category || 'Other',
+                  price: Number(data.price) || 0,
+                  quantity: data.quantity || 1,
+                  is_discount: data.is_discount || false,
+                  is_food: data.is_food !== undefined ? data.is_food : true,
+                },
+              ],
+            }
+          : d
+      )
+    );
+  };
+
   const handleConfirm = async () => {
     setSaving(true);
     try {

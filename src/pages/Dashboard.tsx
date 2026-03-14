@@ -186,10 +186,10 @@ const Dashboard = () => {
             </div>
             <div className="flex-1">
               <h2 className="font-display text-lg font-bold">
-                {cookingLoading ? 'Checking your shop…' : 'Use what you bought'}
+                {cookingLoading ? 'Checking your shop…' : "What's for tea?"}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {cookingLoading ? 'Finding the best ideas for tonight' : 'Tap for ideas based on your last shop'}
+                {cookingLoading ? 'Finding the best ideas for tonight' : "Tap for ideas from your last shop"}
               </p>
             </div>
           </CardContent>
@@ -227,7 +227,7 @@ const Dashboard = () => {
             </div>
             <div className="flex-1">
               <h2 className="font-display font-semibold">Back from the shops?</h2>
-              <p className="text-sm text-muted-foreground">Scan your docket — we'll handle the rest</p>
+              <p className="text-sm text-muted-foreground">Scan your docket — we'll sort the rest</p>
             </div>
             <Button size="sm" onClick={() => navigate('/scan')}>
               Scan <ArrowRight className="ml-1 h-3 w-3" />

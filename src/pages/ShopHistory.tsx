@@ -297,17 +297,25 @@ const ShopHistory = () => {
                               {receipt.item_count} items
                             </p>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-semibold">
-                              ${Number(receipt.total_amount || 0).toFixed(2)}
-                            </p>
-                            {receipt.non_food_total > 0 && (
-                              <p className="text-[10px] text-muted-foreground">
-                                ${receipt.food_total.toFixed(2)} food
+                          <div className="text-right shrink-0 flex items-center gap-2">
+                            <div>
+                              <p className="text-sm font-semibold">
+                                ${Number(receipt.total_amount || 0).toFixed(2)}
                               </p>
-                            )}
+                              {receipt.non_food_total > 0 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  ${receipt.food_total.toFixed(2)} food
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => deleteReceipt(receipt.id, e)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                              title="Delete this docket"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                        </div>
                       ))}
                     </div>
                   </CardContent>

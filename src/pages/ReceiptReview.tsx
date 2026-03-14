@@ -287,6 +287,13 @@ const ReceiptReview = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-primary text-sm">${docketTotal.toFixed(2)}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeDocket(docket.id); }}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      title="Delete this docket"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                     {isExpanded ? (
                       <ChevronUp className="h-4 w-4 text-muted-foreground" />
                     ) : (

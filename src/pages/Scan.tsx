@@ -6,7 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Upload, FileText, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ScannedImage {

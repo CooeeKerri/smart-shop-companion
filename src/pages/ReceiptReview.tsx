@@ -245,10 +245,13 @@ const ReceiptReview = () => {
                           onChange={(e) => updateItem(docket.id, item.id, 'clean_name', e.target.value)}
                           className="h-8 text-sm font-medium border-0 bg-transparent px-0 focus-visible:ring-0"
                         />
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex gap-1 mt-1 flex-wrap">
                           <Badge variant="secondary" className="text-xs">{item.category}</Badge>
                           {item.is_discount && (
-                            <Badge variant="outline" className="text-xs text-green-600">Discount</Badge>
+                            <Badge variant="outline" className="text-xs text-destructive">Discount</Badge>
+                          )}
+                          {!item.is_food && (
+                            <Badge variant="outline" className="text-xs">Non-food</Badge>
                           )}
                         </div>
                       </div>

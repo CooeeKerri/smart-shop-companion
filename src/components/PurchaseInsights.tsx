@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Package,
+  Bell,
 } from 'lucide-react';
 
 interface FrequentItem {
@@ -20,6 +21,8 @@ interface FrequentItem {
   total_qty: number;
   purchase_count: number;
   avg_price: number;
+  last_price: number | null;
+  price_alert: boolean; // last price > avg price (not on special)
   last_purchased: string;
   days_since_last: number;
   avg_days_between: number | null;
@@ -78,6 +81,7 @@ const PurchaseInsights = () => {
           totalQty: number;
           totalSpent: number;
           dates: string[];
+          prices: { date: string; price: number; isDiscount: boolean }[];
         }
       > = {};
 
@@ -92,6 +96,7 @@ const PurchaseInsights = () => {
             totalQty: 0,
             totalSpent: 0,
             dates: [],
+            prices: [],
           };
         }
 
@@ -102,6 +107,9 @@ const PurchaseInsights = () => {
         const date = dateMap[item.receipt_id];
         if (date && !agg[key].dates.includes(date)) {
           agg[key].dates.push(date);
+        }
+        if (date && item.price != null) {
+          agg[key].prices.push({ date, price: Number(item.price), isDiscount: !!item.is_discount });
         }
       }
 
@@ -133,12 +141,22 @@ const PurchaseInsights = () => {
 
           const restockDue = avgDays !== null && daysSinceLast >= avgDays * 0.8;
 
+          // Price alert: find last non-discount price and compare to average
+          const sortedPrices = a.prices
+            .sort((x, y) => new Date(x.date).getTime() - new Date(y.date).getTime());
+          const lastNonDiscount = [...sortedPrices].reverse().find((p) => !p.isDiscount);
+          const avgPrice = a.totalSpent / a.totalQty;
+          const lastPrice = lastNonDiscount?.price ?? null;
+          const priceAlert = lastPrice !== null && lastPrice > avgPrice * 1.05; // 5%+ above avg
+
           return {
             clean_name: a.name,
             category: a.category,
             total_qty: a.totalQty,
             purchase_count: a.dates.length,
-            avg_price: a.totalSpent / a.totalQty,
+            avg_price: avgPrice,
+            last_price: lastPrice,
+            price_alert: priceAlert,
             last_purchased: lastDate.toISOString(),
             days_since_last: daysSinceLast,
             avg_days_between: avgDays,
@@ -196,6 +214,38 @@ const PurchaseInsights = () => {
         </Card>
       )}
 
+      {/* Price Alerts - items not on special / overpriced */}
+      {items.filter((i) => i.price_alert).length > 0 && (
+        <Card className="border-destructive/30 bg-gradient-to-br from-destructive/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <Bell className="h-4 w-4 text-destructive" />
+              Price alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-3">
+              These regulars cost more than usual — they may not be on special
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {items.filter((i) => i.price_alert).slice(0, 8).map((item) => (
+                <Badge
+                  key={item.clean_name}
+                  variant="outline"
+                  className="border-destructive/30 bg-destructive/10 text-foreground gap-1.5 py-1.5 px-3"
+                >
+                  <Bell className="h-3 w-3 text-destructive" />
+                  <span className="font-medium">{item.clean_name}</span>
+                  <span className="text-muted-foreground text-[10px]">
+                    · ${item.last_price?.toFixed(2)} vs ${item.avg_price.toFixed(2)} avg
+                  </span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Most Purchased */}
       <Card>
         <CardHeader className="pb-2">
@@ -220,6 +270,9 @@ const PurchaseInsights = () => {
                   <span className="text-sm font-medium truncate">{item.clean_name}</span>
                   {item.restock_due && (
                     <RefreshCw className="h-3 w-3 text-amber-500 shrink-0" />
+                  )}
+                  {item.price_alert && (
+                    <Bell className="h-3 w-3 text-destructive shrink-0" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

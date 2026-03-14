@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Store, Calendar, ChevronDown, ChevronUp, Trash2, Loader2 } from 'lucide-react';
+import { Check, Store, Calendar, ChevronDown, ChevronUp, Trash2, Loader2, Plus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 
 interface ReceiptItem {
@@ -132,6 +133,54 @@ const ReceiptReview = () => {
     );
   };
 
+  const CATEGORIES = [
+    'Fresh Produce', 'Meat & Seafood', 'Dairy', 'Bakery', 'Pantry',
+    'Frozen', 'Drinks', 'Snacks', 'Household', 'Health & Beauty',
+    'Pet', 'Baby', 'Deli', 'Other',
+  ];
+
+  const addItem = async (docketId: string) => {
+    const { data, error } = await supabase
+      .from('receipt_items')
+      .insert({
+        receipt_id: docketId,
+        clean_name: 'New item',
+        raw_name: '',
+        category: 'Other',
+        price: 0,
+        quantity: 1,
+        is_discount: false,
+        is_food: true,
+      })
+      .select()
+      .single();
+
+    if (error || !data) return;
+
+    setDockets((prev) =>
+      prev.map((d) =>
+        d.id === docketId
+          ? {
+              ...d,
+              items: [
+                ...d.items,
+                {
+                  id: data.id,
+                  clean_name: data.clean_name || 'New item',
+                  raw_name: data.raw_name || '',
+                  category: data.category || 'Other',
+                  price: Number(data.price) || 0,
+                  quantity: data.quantity || 1,
+                  is_discount: data.is_discount || false,
+                  is_food: data.is_food !== undefined ? data.is_food : true,
+                },
+              ],
+            }
+          : d
+      )
+    );
+  };
+
   const handleConfirm = async () => {
     setSaving(true);
     try {
@@ -240,13 +289,25 @@ const ReceiptReview = () => {
                       }`}
                     >
                       <div className="flex-1 min-w-0">
-                        <Input
+                         <Input
                           value={item.clean_name}
                           onChange={(e) => updateItem(docket.id, item.id, 'clean_name', e.target.value)}
                           className="h-8 text-sm font-medium border-0 bg-transparent px-0 focus-visible:ring-0"
                         />
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          <Badge variant="secondary" className="text-xs">{item.category}</Badge>
+                        <div className="flex gap-1 mt-1 flex-wrap items-center">
+                          <Select
+                            value={item.category}
+                            onValueChange={(val) => updateItem(docket.id, item.id, 'category', val)}
+                          >
+                            <SelectTrigger className="h-6 text-xs w-auto border-0 bg-secondary/50 px-2 gap-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CATEGORIES.map((cat) => (
+                                <SelectItem key={cat} value={cat} className="text-xs">{cat}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           {item.is_discount && (
                             <Badge variant="outline" className="text-xs text-destructive">Discount</Badge>
                           )}
@@ -257,9 +318,13 @@ const ReceiptReview = () => {
                       </div>
                       <div className="text-right shrink-0 flex items-center gap-2">
                         <div>
-                          <span className={`text-sm font-semibold ${item.is_discount ? 'text-green-600' : ''}`}>
-                            {item.is_discount ? '-' : ''}${Math.abs(item.price * item.quantity).toFixed(2)}
-                          </span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.price}
+                            onChange={(e) => updateItem(docket.id, item.id, 'price', parseFloat(e.target.value) || 0)}
+                            className="h-7 w-20 text-sm font-semibold text-right border-0 bg-transparent px-0 focus-visible:ring-0"
+                          />
                           {item.quantity > 1 && (
                             <p className="text-xs text-muted-foreground">×{item.quantity}</p>
                           )}
@@ -273,6 +338,15 @@ const ReceiptReview = () => {
                       </div>
                     </div>
                   ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={() => addItem(docket.id)}
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    Add missing item
+                  </Button>
                 </CardContent>
               )}
             </Card>

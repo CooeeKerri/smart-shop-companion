@@ -98,27 +98,35 @@ Deno.serve(async (req) => {
 
     messageContent.push({
       type: "text",
-      text: `You are an Australian grocery receipt OCR system. You are given ${imageContents.length} image(s) that may be PARTS OF THE SAME RECEIPT (a long docket photographed in sections) or separate dockets from the same shopping trip.
+      text: `You are an expert Australian grocery receipt OCR system. You must extract EVERY SINGLE LINE ITEM from the receipt image(s). Missing items is a critical failure.
 
-CRITICAL RULES:
-1. DETERMINE if images are parts of the same receipt by looking for:
-   - Overlapping items between images
-   - Same store branding/header/footer
-   - Sequential item numbering
-   - Matching subtotals or running totals
-2. DEDUPLICATE items that appear in multiple images (overlapping sections)
-3. Classify each item as food or non-food:
-   - Food: groceries, drinks, fresh produce, meat, dairy, bakery, pantry items, frozen food, snacks, baby food
-   - Non-food: cleaning products, toiletries, pet supplies, stationery, clothing, kitchenware, bags, gift cards
+You are given ${imageContents.length} image(s) that may be PARTS OF THE SAME RECEIPT (a long docket photographed in sections).
+
+EXTRACTION RULES — READ CAREFULLY:
+1. Go through the receipt LINE BY LINE from top to bottom. Every printed line with a price is an item.
+2. DO NOT SKIP items even if the text is partially obscured, abbreviated, or hard to read. Make your best guess.
+3. Items often have abbreviated names like "CLS MINCE BF 500G" — this is "Coles Beef Mince 500g". Decode ALL abbreviations.
+4. Look for items in ALL sections: the main item list, any "PRICE REDUCED" sections, markdown items, and weighted items.
+5. Weighted/per-kg items show weight and price per kg — extract the FINAL PRICE (the amount charged), not the per-kg rate.
+6. Multi-buy items (e.g. "2 @ $3.50") should have quantity=2 and price=3.50 (unit price).
+7. Lines starting with %, *, or special characters are still valid items — do not skip them.
+8. DEDUPLICATION: If images overlap, the same item may appear in multiple photos. Include each unique item ONLY ONCE.
+9. Count your extracted items and cross-check against any "TOTAL QTY" or item count shown on the receipt.
+
+CLASSIFICATION:
+- Food (is_food=true): ALL edible items — groceries, drinks, fresh produce, meat, seafood, dairy, eggs, bakery, pantry, frozen, snacks, baby food, condiments, sauces, spices, coffee, tea
+- Non-food (is_food=false): cleaning products, laundry, toiletries, pet supplies, pet food, stationery, clothing, kitchenware, bags, gift cards, batteries, light bulbs, cosmetics
+
+CATEGORIES: Fresh Produce, Meat & Seafood, Dairy, Bakery, Pantry, Frozen, Drinks, Snacks, Household, Health & Beauty, Pet, Baby, Deli, Other
 
 Return a JSON object (no markdown fences, raw JSON only):
 {
   "store_name": "Store name from the receipt",
   "items": [
     {
-      "raw_name": "Exact text from receipt",
-      "clean_name": "Human-readable product name",
-      "category": "One of: Fresh Produce, Meat, Dairy, Bakery, Pantry, Frozen, Drinks, Snacks, Household, Health & Beauty, Pet, Baby, Other",
+      "raw_name": "Exact text from receipt line",
+      "clean_name": "Human-readable product name (decode abbreviations)",
+      "category": "One of the categories above",
       "price": 3.50,
       "quantity": 1,
       "is_discount": false,
@@ -128,12 +136,8 @@ Return a JSON object (no markdown fences, raw JSON only):
   "total": 45.60
 }
 
-Rules:
-- Include ALL unique items across all images (no duplicates from overlapping photos)
-- If an item is a discount/savings line, set is_discount to true and make price negative
-- Quantity should reflect multiples if shown (e.g., "2 @ $3.50" = quantity 2, price 3.50)
-- clean_name should be a short, clear product name without codes or abbreviations
-- Set is_food to false for non-food items like cleaning products, bags, toiletries, pet supplies`,
+DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings should have is_discount=true and a NEGATIVE price.
+IMPORTANT: Double-check you haven't missed any items. Every line with a dollar amount must be captured.`,
     });
 
     // Call Lovable AI Gateway

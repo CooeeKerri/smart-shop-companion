@@ -13,6 +13,7 @@ import CategoryBreakdown from '@/components/CategoryBreakdown';
 import { toast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import ReactMarkdown from 'react-markdown';
+import EatSoonAlert from '@/components/EatSoonAlert';
 
 interface ReceiptSummary {
   id: string;

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.occasion-chat]
 verify_jwt = false
+
+[functions.what-to-cook]
+verify_jwt = false

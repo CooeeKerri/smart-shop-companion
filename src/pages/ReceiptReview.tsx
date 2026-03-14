@@ -295,14 +295,47 @@ const ReceiptReview = () => {
     );
   }
 
+  // Determine why review is needed
+  const reviewReasons: string[] = [];
+  for (const d of dockets) {
+    if (d.storeReviewRequired) reviewReasons.push('Store needs confirmation');
+    if (d.confidenceBreakdown?.total_confidence !== undefined && d.confidenceBreakdown.total_confidence < 0.6)
+      reviewReasons.push('Total may be incorrect');
+    if (d.confidenceBreakdown?.date_confidence !== undefined && d.confidenceBreakdown.date_confidence < 0.6)
+      reviewReasons.push('Date could not be read');
+    if (d.items.some((i) => i.confidence !== null && i.confidence < 0.5))
+      reviewReasons.push('Some items need checking');
+  }
+  const uniqueReasons = [...new Set(reviewReasons)];
+
   return (
     <AppLayout>
-      <div className="px-4 pt-6 pb-4">
+      <div className="px-4 pt-6 pb-3">
         <h1 className="font-display text-2xl font-bold">Review your shop</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-0.5">
           {dockets.length} {dockets.length === 1 ? 'docket' : 'dockets'} · {totalItems} items · ${totalAmount.toFixed(2)}
         </p>
       </div>
+
+      <div className="px-4 space-y-3">
+        {/* Why review is needed */}
+        {uniqueReasons.length > 0 && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-warning">Review needed</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {uniqueReasons.map((r, i) => (
+                      <li key={i} className="text-xs text-muted-foreground">• {r}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       <div className="px-4 space-y-4">
         {/* Validation warnings */}

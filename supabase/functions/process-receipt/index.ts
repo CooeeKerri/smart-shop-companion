@@ -268,12 +268,19 @@ HANDLING TRICKY RECEIPT FORMATTING
 1. WRAPPED TEXT: Some items span 2 lines — the product name is on one line and the price on the next. Merge them into a single item.
 2. SEPARATED PRICES: If the item name and price are far apart on the same line, still capture both.
 3. DISCOUNT LINES AFTER ITEMS: Lines like "MEMBER OFFER -$1.00" or "SPECIAL -0.50" that appear directly after an item are discount lines. Set is_discount=true with a NEGATIVE price. Associate them as separate line items (not merged into the product).
-4. ABBREVIATIONS: Decode ALL abbreviations:
+4. ABBREVIATIONS — decode ALL grocery abbreviations into clean names:
    - "CLS" / "COLES" prefix → Coles brand
    - "WW" prefix → Woolworths brand  
+   - "CHK BRST FILT" → "Chicken Breast Fillet"
+   - "TOM SCE PSTA" → "Tomato Pasta Sauce"
+   - "BRCCLI" → "Broccoli"
+   - "MLK F/F 2L" → "Full Fat Milk 2L"
+   - "BNNA" → "Banana"
    - "MINCE BF 500G" → "Beef Mince 500g"
-   - "F/R" → "Free Range", "O/S" → "On Special"
-   - "CHK" → "Chicken", "VEG" → "Vegetables"
+   - "F/R" → "Free Range", "O/S" → "On Special", "F/F" → "Full Fat", "S/L" → "Skinless"
+   - "CHK" → "Chicken", "VEG" → "Vegetables", "BF" → "Beef", "LMB" → "Lamb", "PRK" → "Pork"
+   - "ORG" → "Organic", "GF" → "Gluten Free"
+   - Strip store prefixes (CLS, WW) from the clean_name — they're not part of the product name
 5. QUANTITY INDICATORS: "2 @", "x2", "QTY 2" all mean quantity=2.
 6. DUPLICATE CHECK: If images overlap, include each unique item ONLY ONCE.
 

@@ -33,7 +33,7 @@ interface MonthlyStats {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  const { scansRemaining, scanLimit, isPremium, loading: subLoading } = useSubscription();
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [recentReceipts, setRecentReceipts] = useState<ReceiptSummary[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats>({

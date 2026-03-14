@@ -10,6 +10,8 @@ import {
   Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2, Plus, ShoppingCart, Check,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface ScannedImage {
   id: string;

@@ -130,6 +130,36 @@ const Dashboard = () => {
     }
   };
 
+  const askWhatToCook = async () => {
+    setCookingLoading(true);
+    setCookingSuggestion(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/what-to-cook`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Failed' }));
+        toast({ title: err.error || 'Something went wrong', variant: 'destructive' });
+        return;
+      }
+      const data = await resp.json();
+      setCookingSuggestion(data.suggestion);
+    } catch (e) {
+      console.error('Cook suggestion error:', e);
+      toast({ title: 'Failed to get suggestions', variant: 'destructive' });
+    } finally {
+      setCookingLoading(false);
+    }
+  };
+
   const currentMonth = new Date().toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
 
   return (

@@ -738,8 +738,14 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
       total_discounts: data.total_discounts,
       overall_confidence: data.overall_confidence,
       receipt_time: data.receipt_time,
-      raw_ocr_text: JSON.stringify({ warnings: data.warnings }),
-      status: "reviewed",
+      raw_ocr_text: JSON.stringify({
+        warnings: data.warnings,
+        date_confidence: data.date_confidence,
+        total_confidence: data.total_confidence,
+        item_extraction_confidence: data.item_extraction_confidence,
+        needs_review: data.needs_review,
+      }),
+      status: data.needs_review ? "needs_review" : "reviewed",
       ...(data.receipt_date ? { shop_date: data.receipt_date } : {}),
     })
     .eq("id", receiptId);

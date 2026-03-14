@@ -36,15 +36,15 @@ const Landing = () => {
         <div className="relative mx-auto max-w-lg text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <Sparkles className="h-4 w-4" />
-            Smart post-shop intelligence
+            No planning required
           </div>
           <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            Shop first.
+            Don't plan.
             <br />
-            <span className="text-primary">Plan later.</span>
+            <span className="text-primary">Just scan.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            Scan your grocery receipt and get meal ideas, savings insights, healthier swaps, and next-time guidance based on what you actually bought.
+            Scan your receipt after shopping. We'll show you what to make, what to use first, and how to waste less — without any effort.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button

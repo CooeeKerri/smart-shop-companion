@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar } from 'lucide-react';
+import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2 } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
+import { toast } from '@/hooks/use-toast';
 
 interface ReceiptSummary {
   id: string;
@@ -94,6 +95,20 @@ const Dashboard = () => {
       console.error('Dashboard load error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteReceipt = async (receiptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('meal_suggestions').delete().eq('receipt_id', receiptId);
+      await supabase.from('recommendations').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+      setRecentReceipts((prev) => prev.filter((r) => r.id !== receiptId));
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
     }
   };
 
@@ -220,9 +235,18 @@ const Dashboard = () => {
                         {receipt.item_count} items
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-primary">
-                      ${Number(receipt.total_amount || 0).toFixed(2)}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-semibold text-primary">
+                        ${Number(receipt.total_amount || 0).toFixed(2)}
+                      </span>
+                      <button
+                        onClick={(e) => deleteReceipt(receipt.id, e)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Delete this docket"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

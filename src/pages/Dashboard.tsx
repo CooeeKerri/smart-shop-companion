@@ -44,7 +44,8 @@ const Dashboard = () => {
     avgPerShop: 0,
   });
   const [loading, setLoading] = useState(true);
-
+  const [cookingSuggestion, setCookingSuggestion] = useState<string | null>(null);
+  const [cookingLoading, setCookingLoading] = useState(false);
   const greeting = displayName || user?.email?.split('@')[0] || 'there';
 
   useEffect(() => {

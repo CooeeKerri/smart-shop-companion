@@ -143,6 +143,76 @@ async function downloadImages(supabase: any, paths: string[]) {
   return results;
 }
 
+// ── PASS 0: Server-side quality check ──
+async function runQualityCheck(
+  images: { base64: string; mimeType: string }[],
+  apiKey: string
+): Promise<{ ok: boolean; reason?: string }> {
+  try {
+    const messageContent: any[] = images.map((img) => ({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
+    }));
+
+    messageContent.push({
+      type: "text",
+      text: `You are an image quality assessor for grocery receipt photos. Evaluate whether these ${images.length} image(s) are usable for OCR text extraction.
+
+CHECK THESE QUALITY FACTORS:
+1. Is a grocery receipt clearly visible in the image(s)?
+2. Is the receipt text readable (not too blurry)?
+3. Is the receipt reasonably complete (not severely cropped)?
+4. Is the lighting adequate (not too dark or washed out)?
+5. Is the receipt not severely folded, crumpled, or obscured?
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "usable": true/false,
+  "reason": "If not usable, explain why in a friendly user message. If usable, null."
+}
+
+Be lenient — slight blur, minor shadows, or partial overlap between photos is fine (we merge multi-photo receipts). Only reject truly unusable images.`,
+    });
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [{ role: "user", content: messageContent }],
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      // If quality check fails due to rate limit etc, skip it and proceed
+      console.error("Quality check API error:", response.status);
+      return { ok: true };
+    }
+
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content ?? "";
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+
+    if (parsed.usable === false) {
+      return {
+        ok: false,
+        reason: parsed.reason || "Please retake the receipt photo with the full receipt visible in good lighting.",
+      };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    // On any error, don't block — proceed to extraction
+    console.error("Quality check error:", err);
+    return { ok: true };
+  }
+}
+
 // ── PASS 1: AI Extraction ──
 async function runExtraction(
   images: { base64: string; mimeType: string }[],

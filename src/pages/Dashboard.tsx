@@ -13,6 +13,7 @@ import CategoryBreakdown from '@/components/CategoryBreakdown';
 import { toast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import ReactMarkdown from 'react-markdown';
+import EatSoonAlert from '@/components/EatSoonAlert';
 
 interface ReceiptSummary {
   id: string;
@@ -214,6 +215,9 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Eat Soon — waste risk alert */}
+        <EatSoonAlert />
 
         {/* Scan CTA */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-sm">

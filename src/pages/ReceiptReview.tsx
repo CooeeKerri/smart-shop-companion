@@ -117,6 +117,7 @@ const ReceiptReview = () => {
             storeReviewRequired: (r as any).store_review_required ?? false,
             totalAmount: r.total_amount,
             overallConfidence: (r as any).overall_confidence ?? null,
+            confidenceBreakdown,
             warnings,
             items: (itemsRes.data || []).map((item: any) => ({
               id: item.id,

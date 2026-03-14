@@ -34,6 +34,7 @@ interface PendingReceipt {
 const Scan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { scansRemaining, scanLimit, scansUsed, isPremium, loading: subLoading } = useSubscription();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 

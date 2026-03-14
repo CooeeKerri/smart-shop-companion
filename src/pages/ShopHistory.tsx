@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Store, Calendar, Receipt, DollarSign, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import ReceiptImageViewer from '@/components/ReceiptImageViewer';
 
 interface ReceiptWithItems {
   id: string;

@@ -6,7 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock } from 'lucide-react';
+import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
 import RegularStores from '@/components/RegularStores';
 import CategoryBreakdown from '@/components/CategoryBreakdown';

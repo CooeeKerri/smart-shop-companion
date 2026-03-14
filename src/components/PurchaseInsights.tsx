@@ -271,6 +271,9 @@ const PurchaseInsights = () => {
                   {item.restock_due && (
                     <RefreshCw className="h-3 w-3 text-amber-500 shrink-0" />
                   )}
+                  {item.price_alert && (
+                    <Bell className="h-3 w-3 text-destructive shrink-0" title="Overpriced — not on special" />
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <Badge variant="secondary" className="text-[10px]">

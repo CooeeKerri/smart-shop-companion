@@ -29,8 +29,8 @@ interface MonthlyStats {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const firstName = user?.email?.split('@')[0] ?? 'there';
 
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const [recentReceipts, setRecentReceipts] = useState<ReceiptSummary[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats>({
     totalSpent: 0,
@@ -40,8 +40,20 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const greeting = displayName || user?.email?.split('@')[0] || 'there';
+
   useEffect(() => {
-    if (user) loadData();
+    if (user) {
+      loadData();
+      supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.display_name) setDisplayName(data.display_name);
+        });
+    }
   }, [user]);
 
   const loadData = async () => {
@@ -117,7 +129,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">G'day, {firstName}! 👋</h1>
+        <h1 className="font-display text-2xl font-bold">G'day, {greeting}! 👋</h1>
         <p className="text-sm text-muted-foreground">Here's your {currentMonth} summary</p>
       </div>
 

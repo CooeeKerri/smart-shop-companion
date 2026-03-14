@@ -80,7 +80,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── PASS 1: Extract all data ──
+    // ── PASS 1: Extract with store-specific template ──
+    // First do a quick store detection from the images, then use a tailored prompt
     const extractionResult = await runExtraction(imageContents, LOVABLE_API_KEY);
     if (!extractionResult.ok) {
       return new Response(
@@ -94,7 +95,7 @@ Deno.serve(async (req) => {
     // ── PASS 1.5: Store detection & validation ──
     const storeDetection = detectStore(parsed);
 
-    // ── PASS 2: Validation & confidence scoring ──
+    // ── PASS 2: Validation with store-specific rules ──
     const validated = validateReceipt(parsed, storeDetection);
 
     // Save to database

@@ -69,6 +69,7 @@ const ReceiptReview = () => {
               price: Number(item.price) || 0,
               quantity: item.quantity || 1,
               is_discount: item.is_discount || false,
+              is_food: (item as any).is_food !== undefined ? (item as any).is_food : true,
             })),
           });
         }

@@ -161,6 +161,7 @@ export type Database = {
         Row: {
           category: string | null
           clean_name: string | null
+          confidence: number | null
           created_at: string
           id: string
           is_discount: boolean | null
@@ -173,6 +174,7 @@ export type Database = {
         Insert: {
           category?: string | null
           clean_name?: string | null
+          confidence?: number | null
           created_at?: string
           id?: string
           is_discount?: boolean | null
@@ -185,6 +187,7 @@ export type Database = {
         Update: {
           category?: string | null
           clean_name?: string | null
+          confidence?: number | null
           created_at?: string
           id?: string
           is_discount?: boolean | null
@@ -212,11 +215,15 @@ export type Database = {
           image_paths: string[] | null
           image_url: string | null
           meal_potential_score: number | null
+          overall_confidence: number | null
           raw_ocr_text: string | null
+          receipt_time: string | null
           shop_date: string | null
           status: string
           store_name: string | null
+          subtotal: number | null
           total_amount: number | null
+          total_discounts: number | null
           updated_at: string
           user_id: string
           value_score: number | null
@@ -229,11 +236,15 @@ export type Database = {
           image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
+          overall_confidence?: number | null
           raw_ocr_text?: string | null
+          receipt_time?: string | null
           shop_date?: string | null
           status?: string
           store_name?: string | null
+          subtotal?: number | null
           total_amount?: number | null
+          total_discounts?: number | null
           updated_at?: string
           user_id: string
           value_score?: number | null
@@ -246,11 +257,15 @@ export type Database = {
           image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
+          overall_confidence?: number | null
           raw_ocr_text?: string | null
+          receipt_time?: string | null
           shop_date?: string | null
           status?: string
           store_name?: string | null
+          subtotal?: number | null
           total_amount?: number | null
+          total_discounts?: number | null
           updated_at?: string
           user_id?: string
           value_score?: number | null

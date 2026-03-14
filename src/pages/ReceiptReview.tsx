@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Store, Calendar, ChevronDown, ChevronUp, Trash2, Loader2, Plus } from 'lucide-react';
+import { Check, Store, Calendar, ChevronDown, ChevronUp, Trash2, Loader2, Plus, AlertTriangle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import ReceiptImageViewer from '@/components/ReceiptImageViewer';
@@ -20,6 +20,7 @@ interface ReceiptItem {
   quantity: number;
   is_discount: boolean;
   is_food: boolean;
+  confidence: number | null;
 }
 
 interface Docket {
@@ -27,7 +28,26 @@ interface Docket {
   storeName: string;
   items: ReceiptItem[];
   totalAmount: number | null;
+  overallConfidence: number | null;
+  warnings: string[];
 }
+
+const ConfidenceBadge = ({ confidence }: { confidence: number | null }) => {
+  if (confidence === null) return null;
+  if (confidence >= 0.8) return null; // Don't clutter high-confidence items
+  if (confidence >= 0.5) {
+    return (
+      <Badge variant="outline" className="text-[10px] border-warning/50 text-warning gap-0.5">
+        <AlertTriangle className="h-2.5 w-2.5" /> Check
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] border-destructive/50 text-destructive gap-0.5">
+      <ShieldAlert className="h-2.5 w-2.5" /> Uncertain
+    </Badge>
+  );
+};
 
 const ReceiptReview = () => {
   const navigate = useNavigate();
@@ -59,11 +79,25 @@ const ReceiptReview = () => {
         ]);
 
         if (receiptRes.data) {
+          const r = receiptRes.data;
+          let warnings: string[] = [];
+          try {
+            const ocrData = r.raw_ocr_text ? JSON.parse(r.raw_ocr_text) : {};
+            warnings = ocrData.warnings || [];
+          } catch { /* not JSON, that's fine */ }
+
+          // Use receipt date if available
+          if (r.shop_date) {
+            setShopDate(r.shop_date);
+          }
+
           loaded.push({
             id,
-            storeName: receiptRes.data.store_name || 'Unknown Store',
-            totalAmount: receiptRes.data.total_amount,
-            items: (itemsRes.data || []).map((item) => ({
+            storeName: r.store_name || 'Unknown Store',
+            totalAmount: r.total_amount,
+            overallConfidence: (r as any).overall_confidence ?? null,
+            warnings,
+            items: (itemsRes.data || []).map((item: any) => ({
               id: item.id,
               clean_name: item.clean_name || item.raw_name || '',
               raw_name: item.raw_name || '',
@@ -71,7 +105,8 @@ const ReceiptReview = () => {
               price: Number(item.price) || 0,
               quantity: item.quantity || 1,
               is_discount: item.is_discount || false,
-              is_food: (item as any).is_food !== undefined ? (item as any).is_food : true,
+              is_food: item.is_food !== undefined ? item.is_food : true,
+              confidence: item.confidence !== undefined ? Number(item.confidence) : null,
             })),
           });
         }
@@ -104,15 +139,11 @@ const ReceiptReview = () => {
 
   const removeDocket = async (docketId: string) => {
     try {
-      // Delete items first, then receipt
       await supabase.from('receipt_items').delete().eq('receipt_id', docketId);
       await supabase.from('receipts').delete().eq('id', docketId);
       setDockets((prev) => prev.filter((d) => d.id !== docketId));
-      toast({ title: 'Docket removed' });
-      // If no dockets left, go back to scan
-      if (dockets.length <= 1) {
-        navigate('/scan');
-      }
+      toast({ title: 'Docket deleted' });
+      if (dockets.length <= 1) navigate('/scan');
     } catch (err) {
       console.error('Delete docket error:', err);
       toast({ title: 'Error deleting docket', variant: 'destructive' });
@@ -123,12 +154,7 @@ const ReceiptReview = () => {
     setDockets((prev) =>
       prev.map((d) =>
         d.id === docketId
-          ? {
-              ...d,
-              items: d.items.map((item) =>
-                item.id === itemId ? { ...item, [field]: value } : item
-              ),
-            }
+          ? { ...d, items: d.items.map((item) => item.id === itemId ? { ...item, [field]: value } : item) }
           : d
       )
     );
@@ -191,6 +217,7 @@ const ReceiptReview = () => {
                   quantity: data.quantity || 1,
                   is_discount: data.is_discount || false,
                   is_food: data.is_food !== undefined ? data.is_food : true,
+                  confidence: null,
                 },
               ],
             }
@@ -202,7 +229,6 @@ const ReceiptReview = () => {
   const handleConfirm = async () => {
     setSaving(true);
     try {
-      // Save all edits back to DB
       for (const docket of dockets) {
         await supabase
           .from('receipts')
@@ -257,6 +283,42 @@ const ReceiptReview = () => {
       </div>
 
       <div className="px-4 space-y-4">
+        {/* Validation warnings */}
+        {dockets.some((d) => d.warnings.length > 0) && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="p-3 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-warning text-xs font-semibold">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Heads up — please check these:
+              </div>
+              {dockets.flatMap((d) => d.warnings).map((w, i) => (
+                <p key={i} className="text-xs text-muted-foreground">• {w}</p>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Overall confidence */}
+        {dockets.some((d) => d.overallConfidence !== null) && (
+          <div className="flex items-center gap-2">
+            {dockets.map((d) => {
+              if (d.overallConfidence === null) return null;
+              const pct = Math.round(d.overallConfidence * 100);
+              const isGood = pct >= 80;
+              return (
+                <Badge
+                  key={d.id}
+                  variant="outline"
+                  className={`text-xs gap-1 ${isGood ? 'border-primary/40 text-primary' : 'border-warning/40 text-warning'}`}
+                >
+                  {isGood ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                  {pct}% scan confidence
+                </Badge>
+              );
+            })}
+          </div>
+        )}
+
         {/* Date */}
         <div className="space-y-1">
           <label className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -269,6 +331,7 @@ const ReceiptReview = () => {
         {dockets.map((docket) => {
           const isExpanded = expandedDockets.has(docket.id);
           const docketTotal = docket.items.reduce((s, i) => s + i.price * i.quantity, 0);
+          const lowConfItems = docket.items.filter((i) => i.confidence !== null && i.confidence < 0.5).length;
 
           return (
             <Card key={docket.id}>
@@ -285,6 +348,11 @@ const ReceiptReview = () => {
                     <Badge variant="outline" className="text-xs">
                       {docket.items.filter((i) => !i.is_discount).length} items
                     </Badge>
+                    {lowConfItems > 0 && (
+                      <Badge variant="outline" className="text-[10px] border-warning/50 text-warning gap-0.5">
+                        <AlertTriangle className="h-2.5 w-2.5" /> {lowConfItems} uncertain
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-primary text-sm">${docketTotal.toFixed(2)}</span>
@@ -312,14 +380,17 @@ const ReceiptReview = () => {
                       key={item.id}
                       className={`flex items-center gap-3 border-b pb-3 last:border-0 last:pb-0 ${
                         item.is_discount ? 'opacity-60' : ''
-                      }`}
+                      } ${item.confidence !== null && item.confidence < 0.5 ? 'bg-warning/5 -mx-2 px-2 rounded-lg' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
-                         <Input
-                          value={item.clean_name}
-                          onChange={(e) => updateItem(docket.id, item.id, 'clean_name', e.target.value)}
-                          className="h-8 text-sm font-medium border-0 bg-transparent px-0 focus-visible:ring-0"
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            value={item.clean_name}
+                            onChange={(e) => updateItem(docket.id, item.id, 'clean_name', e.target.value)}
+                            className="h-8 text-sm font-medium border-0 bg-transparent px-0 focus-visible:ring-0"
+                          />
+                          <ConfidenceBadge confidence={item.confidence} />
+                        </div>
                         <div className="flex gap-1 mt-1 flex-wrap items-center">
                           <Select
                             value={item.category}
@@ -378,6 +449,39 @@ const ReceiptReview = () => {
             </Card>
           );
         })}
+
+        {/* Total vs receipt comparison */}
+        {dockets.some((d) => d.totalAmount !== null) && (
+          <Card>
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Calculated total</span>
+                <span className="font-semibold">${totalAmount.toFixed(2)}</span>
+              </div>
+              {dockets.map((d) => {
+                if (d.totalAmount === null) return null;
+                const diff = Math.abs(totalAmount - d.totalAmount);
+                return (
+                  <div key={d.id} className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-muted-foreground">Receipt total</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">${d.totalAmount.toFixed(2)}</span>
+                      {diff > 1 ? (
+                        <Badge variant="outline" className="text-[10px] border-warning/50 text-warning">
+                          ${diff.toFixed(2)} diff
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
+                          <Check className="h-2.5 w-2.5 mr-0.5" /> Matches
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3 pb-4">

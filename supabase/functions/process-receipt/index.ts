@@ -115,6 +115,10 @@ Deno.serve(async (req) => {
         subtotal: validated.subtotal,
         total_discounts: validated.total_discounts,
         overall_confidence: validated.overall_confidence,
+        date_confidence: validated.date_confidence,
+        total_confidence: validated.total_confidence,
+        item_extraction_confidence: validated.item_extraction_confidence,
+        needs_review: validated.needs_review,
         warnings: validated.warnings,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

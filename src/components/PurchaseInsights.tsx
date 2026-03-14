@@ -225,7 +225,7 @@ const PurchaseInsights = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground mb-3">
-              These regulars cost more than usual — they may not be on special
+              These regulars cost more than usual — might not be on special right now
             </p>
             <div className="flex flex-wrap gap-2">
               {items.filter((i) => i.price_alert).slice(0, 8).map((item) => (

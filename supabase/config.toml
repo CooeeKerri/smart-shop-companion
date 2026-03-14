@@ -2,3 +2,6 @@ project_id = "exxluvmspezjbzjfjvns"
 
 [functions.budget-chat]
 verify_jwt = false
+
+[functions.occasion-chat]
+verify_jwt = false

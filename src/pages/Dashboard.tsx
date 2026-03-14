@@ -235,9 +235,18 @@ const Dashboard = () => {
                         {receipt.item_count} items
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-primary">
-                      ${Number(receipt.total_amount || 0).toFixed(2)}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-sm font-semibold text-primary">
+                        ${Number(receipt.total_amount || 0).toFixed(2)}
+                      </span>
+                      <button
+                        onClick={(e) => deleteReceipt(receipt.id, e)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Delete this docket"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

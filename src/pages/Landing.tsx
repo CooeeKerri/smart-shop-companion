@@ -5,23 +5,23 @@ import { Receipt, ShoppingCart, UtensilsCrossed, TrendingDown, ArrowRight, Spark
 const features = [
   {
     icon: Receipt,
-    title: 'Scan your docket',
-    description: 'Upload or photograph your grocery receipt and we\'ll extract every item automatically.',
-  },
-  {
-    icon: TrendingDown,
-    title: 'Spot savings',
-    description: 'See what was great value and where you could save next time with cheaper swaps.',
+    title: 'Just scan your docket',
+    description: 'No meal planning. No lists. Just snap your receipt after shopping — we do the rest.',
   },
   {
     icon: UtensilsCrossed,
-    title: 'Get meal ideas',
-    description: 'Realistic, family-friendly meals based on what you actually bought — not a fantasy list.',
+    title: 'Use what you bought',
+    description: 'We show you what to make with what\'s already in your kitchen. No extra trips.',
+  },
+  {
+    icon: TrendingDown,
+    title: 'Waste less, spend less',
+    description: 'See where your money went and quietly build better shopping habits over time.',
   },
   {
     icon: ShoppingCart,
-    title: 'Healthier swaps',
-    description: 'Simple suggestions for healthier alternatives you can pick up on your next shop.',
+    title: 'Zero effort required',
+    description: 'No food diaries. No guilt. Just small, smart nudges after every shop.',
   },
 ];
 
@@ -36,15 +36,15 @@ const Landing = () => {
         <div className="relative mx-auto max-w-lg text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <Sparkles className="h-4 w-4" />
-            Smart post-shop intelligence
+            No planning required
           </div>
           <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            Shop first.
+            Don't plan.
             <br />
-            <span className="text-primary">Plan later.</span>
+            <span className="text-primary">Just scan.</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            Scan your grocery receipt and get meal ideas, savings insights, healthier swaps, and next-time guidance based on what you actually bought.
+            Scan your receipt after shopping. We'll show you what to make, what to use first, and how to waste less — without any effort.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button
@@ -90,7 +90,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t px-4 py-6 text-center text-sm text-muted-foreground">
-        <p>Made for Aussie families who shop smart 🇦🇺</p>
+        <p>For people who shop first and figure it out later 🇦🇺</p>
       </footer>
     </div>
   );

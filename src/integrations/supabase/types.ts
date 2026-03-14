@@ -164,6 +164,7 @@ export type Database = {
           confidence: number | null
           created_at: string
           id: string
+          ingredient_keyword: string | null
           is_discount: boolean | null
           is_food: boolean | null
           price: number | null
@@ -177,6 +178,7 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           id?: string
+          ingredient_keyword?: string | null
           is_discount?: boolean | null
           is_food?: boolean | null
           price?: number | null
@@ -190,6 +192,7 @@ export type Database = {
           confidence?: number | null
           created_at?: string
           id?: string
+          ingredient_keyword?: string | null
           is_discount?: boolean | null
           is_food?: boolean | null
           price?: number | null

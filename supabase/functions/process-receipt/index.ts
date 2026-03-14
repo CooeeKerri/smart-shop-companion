@@ -268,12 +268,19 @@ HANDLING TRICKY RECEIPT FORMATTING
 1. WRAPPED TEXT: Some items span 2 lines — the product name is on one line and the price on the next. Merge them into a single item.
 2. SEPARATED PRICES: If the item name and price are far apart on the same line, still capture both.
 3. DISCOUNT LINES AFTER ITEMS: Lines like "MEMBER OFFER -$1.00" or "SPECIAL -0.50" that appear directly after an item are discount lines. Set is_discount=true with a NEGATIVE price. Associate them as separate line items (not merged into the product).
-4. ABBREVIATIONS: Decode ALL abbreviations:
+4. ABBREVIATIONS — decode ALL grocery abbreviations into clean names:
    - "CLS" / "COLES" prefix → Coles brand
    - "WW" prefix → Woolworths brand  
+   - "CHK BRST FILT" → "Chicken Breast Fillet"
+   - "TOM SCE PSTA" → "Tomato Pasta Sauce"
+   - "BRCCLI" → "Broccoli"
+   - "MLK F/F 2L" → "Full Fat Milk 2L"
+   - "BNNA" → "Banana"
    - "MINCE BF 500G" → "Beef Mince 500g"
-   - "F/R" → "Free Range", "O/S" → "On Special"
-   - "CHK" → "Chicken", "VEG" → "Vegetables"
+   - "F/R" → "Free Range", "O/S" → "On Special", "F/F" → "Full Fat", "S/L" → "Skinless"
+   - "CHK" → "Chicken", "VEG" → "Vegetables", "BF" → "Beef", "LMB" → "Lamb", "PRK" → "Pork"
+   - "ORG" → "Organic", "GF" → "Gluten Free"
+   - Strip store prefixes (CLS, WW) from the clean_name — they're not part of the product name
 5. QUANTITY INDICATORS: "2 @", "x2", "QTY 2" all mean quantity=2.
 6. DUPLICATE CHECK: If images overlap, include each unique item ONLY ONCE.
 
@@ -311,10 +318,11 @@ Return ONLY valid JSON (no markdown fences):
   "receipt_time": "HH:MM or null",
   "items": [
     {
-      "raw_name": "Exact text from receipt line(s) — preserve original for traceability",
-      "clean_name": "Human-readable product name (decode abbreviations, merge wrapped lines)",
-      "category": "One of the categories above",
-      "price": 3.50,
+      "raw_name": "CHK BRST FILT 500G",
+      "clean_name": "Chicken Breast Fillet 500g",
+      "ingredient_keyword": "chicken breast",
+      "category": "Meat & Seafood",
+      "price": 7.50,
       "quantity": 1,
       "is_discount": false,
       "is_food": true,
@@ -325,6 +333,12 @@ Return ONLY valid JSON (no markdown fences):
   "total_discounts": -3.20,
   "total": 39.30
 }
+
+INGREDIENT_KEYWORD RULES:
+- Extract the core grocery ingredient, lowercase, no brand, no size, no packaging.
+- Examples: "Coles Chicken Breast Fillet 500g" → "chicken breast", "WW Full Cream Milk 2L" → "milk", "Broccoli" → "broccoli", "Tomato Pasta Sauce 500g" → "pasta sauce", "Dishwashing Liquid" → null (non-food)
+- For non-food items, set ingredient_keyword to null.
+- For discount lines, set ingredient_keyword to null.
 
 DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings → is_discount=true, NEGATIVE price. These are separate items in the array, NOT merged into the product they apply to.
 FINAL CHECK: Review your output. Every item must be a real product. No totals, no payment lines, no loyalty info.`,
@@ -569,6 +583,7 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
   const items = (parsed.items || []).map((item: any) => ({
     raw_name: item.raw_name || "",
     clean_name: item.clean_name || item.raw_name || "",
+    ingredient_keyword: item.ingredient_keyword || null,
     category: item.category || "Other",
     price: typeof item.price === "number" ? item.price : parseFloat(item.price) || 0,
     quantity: item.quantity || 1,
@@ -693,6 +708,7 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
     receipt_id: receiptId,
     raw_name: item.raw_name,
     clean_name: item.clean_name,
+    ingredient_keyword: item.ingredient_keyword,
     category: item.category,
     price: item.price,
     quantity: item.quantity,

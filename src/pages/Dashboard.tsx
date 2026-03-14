@@ -170,27 +170,37 @@ const Dashboard = () => {
       </div>
 
       <div className="px-4 space-y-4">
-        {/* What Should I Cook? */}
-        <Button
-          className="w-full h-16 text-lg font-display font-bold gap-3 shadow-lg shadow-primary/20"
-          size="lg"
-          onClick={askWhatToCook}
-          disabled={cookingLoading}
+        {/* Use What You Bought — habit nudge */}
+        <Card
+          className="cursor-pointer border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+          onClick={!cookingLoading ? askWhatToCook : undefined}
         >
-          {cookingLoading ? (
-            <><Loader2 className="h-6 w-6 animate-spin" /> Thinking…</>
-          ) : (
-            <><Sparkles className="h-6 w-6" /> What Should I Cook?</>
-          )}
-        </Button>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+              {cookingLoading ? (
+                <Loader2 className="h-7 w-7 animate-spin" />
+              ) : (
+                <Sparkles className="h-7 w-7" />
+              )}
+            </div>
+            <div className="flex-1">
+              <h2 className="font-display text-lg font-bold">
+                {cookingLoading ? 'Checking your shop…' : 'Use what you bought'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {cookingLoading ? 'Finding the best ideas for tonight' : 'Tap for ideas based on your last shop'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Cooking suggestion */}
+        {/* Suggestion result */}
         {cookingSuggestion && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent animate-fade-in">
+          <Card className="border-primary/20 animate-fade-in">
             <CardHeader className="pb-2">
               <CardTitle className="font-display text-base flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <UtensilsCrossed className="h-4 w-4 text-primary" /> Tonight's ideas
+                  <UtensilsCrossed className="h-4 w-4 text-primary" /> From your last shop
                 </span>
                 <button onClick={() => setCookingSuggestion(null)} className="text-muted-foreground hover:text-foreground">
                   <X className="h-4 w-4" />

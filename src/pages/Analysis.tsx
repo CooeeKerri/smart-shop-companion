@@ -27,6 +27,8 @@ const Analysis = () => {
       </div>
 
       <div className="px-4 space-y-4">
+        {/* Smart Insight — 1 simple takeaway */}
+        <SmartInsight receiptIds={receiptIds} />
         {/* Score cards */}
         <div className="grid grid-cols-2 gap-3">
           {scores.map(({ icon: Icon, label, score, color }) => (

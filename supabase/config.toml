@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.what-to-cook]
 verify_jwt = false
+
+[functions.process-receipt]
+verify_jwt = false
+
+[functions.analyze-receipt]
+verify_jwt = false

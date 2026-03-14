@@ -140,6 +140,7 @@ export type Database = {
           created_at: string
           id: string
           is_discount: boolean | null
+          is_food: boolean | null
           price: number | null
           quantity: number
           raw_name: string | null
@@ -151,6 +152,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_discount?: boolean | null
+          is_food?: boolean | null
           price?: number | null
           quantity?: number
           raw_name?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_discount?: boolean | null
+          is_food?: boolean | null
           price?: number | null
           quantity?: number
           raw_name?: string | null

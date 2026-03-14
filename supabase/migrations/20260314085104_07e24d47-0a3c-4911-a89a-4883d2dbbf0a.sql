@@ -1,0 +1,1 @@
+ALTER TABLE public.receipt_items ADD COLUMN IF NOT EXISTS is_food boolean DEFAULT true;

@@ -91,9 +91,18 @@ const ReceiptReview = () => {
         if (receiptRes.data) {
           const r = receiptRes.data;
           let warnings: string[] = [];
+          let confidenceBreakdown: ConfidenceBreakdown | null = null;
           try {
             const ocrData = r.raw_ocr_text ? JSON.parse(r.raw_ocr_text) : {};
             warnings = ocrData.warnings || [];
+            if (ocrData.date_confidence !== undefined) {
+              confidenceBreakdown = {
+                date_confidence: ocrData.date_confidence ?? 0,
+                total_confidence: ocrData.total_confidence ?? 0,
+                item_extraction_confidence: ocrData.item_extraction_confidence ?? 0,
+                needs_review: ocrData.needs_review ?? false,
+              };
+            }
           } catch { /* not JSON, that's fine */ }
 
           // Use receipt date if available

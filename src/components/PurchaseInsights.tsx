@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Package,
+  Bell,
 } from 'lucide-react';
 
 interface FrequentItem {

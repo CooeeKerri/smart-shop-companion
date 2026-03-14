@@ -252,7 +252,7 @@ const PurchaseInsights = () => {
           <CardTitle className="flex items-center justify-between font-display text-base">
             <div className="flex items-center gap-2">
               <ShoppingBasket className="h-4 w-4 text-primary" />
-              Most purchased items
+              Your regulars
             </div>
             <Badge variant="secondary" className="text-xs font-mono">
               {items.length} items tracked

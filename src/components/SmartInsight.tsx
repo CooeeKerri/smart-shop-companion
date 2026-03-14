@@ -72,7 +72,7 @@ const SmartInsight = ({ receiptIds }: SmartInsightProps) => {
           <Lightbulb className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <p className="text-xs font-semibold text-primary mb-0.5">Smart Insight</p>
+          <p className="text-xs font-semibold text-primary mb-0.5">Shopping Insight</p>
           <p className="text-sm text-foreground">{insight}</p>
         </div>
       </CardContent>

@@ -226,14 +226,28 @@ const Scan = () => {
           .update({ image_url: imagePaths[0], image_paths: imagePaths } as any)
           .eq('id', receipt.id);
 
-        // 4. Call OCR
-        const { error: ocrError } = await supabase.functions.invoke(
+        // 4. Call OCR (with server-side quality gate)
+        const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
           'process-receipt',
           { body: { receipt_id: receipt.id, image_paths: imagePaths } }
         );
 
         if (ocrError) {
           console.error(`OCR error for docket ${dIdx + 1}:`, ocrError);
+        }
+
+        // Check if server rejected image quality
+        if (ocrData?.rejected) {
+          toast({
+            title: 'Photo quality issue',
+            description: ocrData.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+            variant: 'destructive',
+            duration: 8000,
+          });
+          // Clean up the rejected receipt
+          await supabase.from('receipts').delete().eq('id', receipt.id);
+          receiptIds.pop();
+          continue;
         }
       }
 

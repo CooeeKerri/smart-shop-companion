@@ -266,6 +266,8 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+        {/* Regular shopping locations */}
+        <RegularStores />
         {/* Purchase insights & restock alerts */}
         <PurchaseInsights />
       </div>

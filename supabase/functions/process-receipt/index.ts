@@ -421,6 +421,11 @@ INGREDIENT_KEYWORD RULES:
 - For discount lines, set ingredient_keyword to null.
 
 DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings → is_discount=true, NEGATIVE price. These are separate items in the array, NOT merged into the product they apply to.
+
+${storeTemplates}
+
+INSTRUCTIONS: First identify the store from the receipt header, then apply the matching store template above for parsing rules. If the store doesn't match any template, use the UNKNOWN/GENERIC rules and set item confidence to 0.5-0.7.
+
 FINAL CHECK: Review your output. Every item must be a real product. No totals, no payment lines, no loyalty info.`,
   });
 

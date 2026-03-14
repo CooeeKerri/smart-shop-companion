@@ -318,10 +318,11 @@ Return ONLY valid JSON (no markdown fences):
   "receipt_time": "HH:MM or null",
   "items": [
     {
-      "raw_name": "Exact text from receipt line(s) — preserve original for traceability",
-      "clean_name": "Human-readable product name (decode abbreviations, merge wrapped lines)",
-      "category": "One of the categories above",
-      "price": 3.50,
+      "raw_name": "CHK BRST FILT 500G",
+      "clean_name": "Chicken Breast Fillet 500g",
+      "ingredient_keyword": "chicken breast",
+      "category": "Meat & Seafood",
+      "price": 7.50,
       "quantity": 1,
       "is_discount": false,
       "is_food": true,
@@ -332,6 +333,12 @@ Return ONLY valid JSON (no markdown fences):
   "total_discounts": -3.20,
   "total": 39.30
 }
+
+INGREDIENT_KEYWORD RULES:
+- Extract the core grocery ingredient, lowercase, no brand, no size, no packaging.
+- Examples: "Coles Chicken Breast Fillet 500g" → "chicken breast", "WW Full Cream Milk 2L" → "milk", "Broccoli" → "broccoli", "Tomato Pasta Sauce 500g" → "pasta sauce", "Dishwashing Liquid" → null (non-food)
+- For non-food items, set ingredient_keyword to null.
+- For discount lines, set ingredient_keyword to null.
 
 DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings → is_discount=true, NEGATIVE price. These are separate items in the array, NOT merged into the product they apply to.
 FINAL CHECK: Review your output. Every item must be a real product. No totals, no payment lines, no loyalty info.`,

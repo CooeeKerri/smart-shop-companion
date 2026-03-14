@@ -26,6 +26,8 @@ interface ReceiptItem {
 interface Docket {
   id: string;
   storeName: string;
+  storeConfidence: number | null;
+  storeReviewRequired: boolean;
   items: ReceiptItem[];
   totalAmount: number | null;
   overallConfidence: number | null;
@@ -94,6 +96,8 @@ const ReceiptReview = () => {
           loaded.push({
             id,
             storeName: r.store_name || 'Unknown Store',
+            storeConfidence: (r as any).store_confidence ?? null,
+            storeReviewRequired: (r as any).store_review_required ?? false,
             totalAmount: r.total_amount,
             overallConfidence: (r as any).overall_confidence ?? null,
             warnings,
@@ -294,6 +298,60 @@ const ReceiptReview = () => {
               {dockets.flatMap((d) => d.warnings).map((w, i) => (
                 <p key={i} className="text-xs text-muted-foreground">• {w}</p>
               ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Store confirmation for low-confidence detection */}
+        {dockets.some((d) => d.storeReviewRequired) && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4 space-y-3">
+              {dockets.filter((d) => d.storeReviewRequired).map((docket) => {
+                const STORE_OPTIONS = ['Coles', 'Woolworths', 'Aldi', 'IGA', 'Spudshed', 'Farmer Jacks', 'Costco', 'Harris Farm', 'FoodWorks', 'Drakes', 'Other'];
+                const confPct = docket.storeConfidence ? Math.round(docket.storeConfidence * 100) : 0;
+                return (
+                  <div key={docket.id} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-medium">
+                        We think this receipt is from <strong>{docket.storeName}</strong>
+                        {confPct > 0 && <span className="text-muted-foreground font-normal"> ({confPct}% confident)</span>}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Confirm or select the correct store:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {STORE_OPTIONS.map((store) => (
+                        <button
+                          key={store}
+                          onClick={() => {
+                            updateStoreName(docket.id, store);
+                            setDockets((prev) =>
+                              prev.map((d) =>
+                                d.id === docket.id ? { ...d, storeReviewRequired: false, storeConfidence: 1.0 } : d
+                              )
+                            );
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                            docket.storeName === store
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          }`}
+                        >
+                          {store === docket.storeName && <Check className="inline h-3 w-3 mr-1" />}
+                          {store}
+                        </button>
+                      ))}
+                    </div>
+                    {docket.storeName === 'Other' && (
+                      <Input
+                        placeholder="Type store name…"
+                        className="h-8 text-sm"
+                        onChange={(e) => updateStoreName(docket.id, e.target.value)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         )}

@@ -210,6 +210,7 @@ export type Database = {
       receipts: {
         Row: {
           created_at: string
+          detected_abn: string | null
           health_score: number | null
           id: string
           image_paths: string[] | null
@@ -220,7 +221,9 @@ export type Database = {
           receipt_time: string | null
           shop_date: string | null
           status: string
+          store_confidence: number | null
           store_name: string | null
+          store_review_required: boolean | null
           subtotal: number | null
           total_amount: number | null
           total_discounts: number | null
@@ -231,6 +234,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          detected_abn?: string | null
           health_score?: number | null
           id?: string
           image_paths?: string[] | null
@@ -241,7 +245,9 @@ export type Database = {
           receipt_time?: string | null
           shop_date?: string | null
           status?: string
+          store_confidence?: number | null
           store_name?: string | null
+          store_review_required?: boolean | null
           subtotal?: number | null
           total_amount?: number | null
           total_discounts?: number | null
@@ -252,6 +258,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          detected_abn?: string | null
           health_score?: number | null
           id?: string
           image_paths?: string[] | null
@@ -262,7 +269,9 @@ export type Database = {
           receipt_time?: string | null
           shop_date?: string | null
           status?: string
+          store_confidence?: number | null
           store_name?: string | null
+          store_review_required?: boolean | null
           subtotal?: number | null
           total_amount?: number | null
           total_discounts?: number | null

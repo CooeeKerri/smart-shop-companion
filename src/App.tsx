@@ -14,6 +14,7 @@ import Analysis from "./pages/Analysis";
 import Meals from "./pages/Meals";
 import ShopHistory from "./pages/ShopHistory";
 import Account from "./pages/Account";
+import BudgetChat from "./pages/BudgetChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/meals" element={<Meals />} />
             <Route path="/history" element={<ShopHistory />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/budget-chat" element={<BudgetChat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

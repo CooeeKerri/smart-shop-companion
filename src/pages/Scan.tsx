@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2, Plus, ShoppingCart, Check,
+  Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2, Plus, ShoppingCart, Check, AlertTriangle,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import UpgradePrompt from '@/components/UpgradePrompt';
+import { preprocessReceiptImage } from '@/lib/receiptPreprocess';
 
 interface ScannedImage {
   id: string;
@@ -76,21 +77,53 @@ const Scan = () => {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [preprocessingImage, setPreprocessingImage] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    e.target.value = '';
+
+    setPreprocessingImage(true);
+
+    try {
+      const result = await preprocessReceiptImage(file);
+
+      if (!result.quality.ok) {
+        toast({
+          title: 'Photo quality issue',
+          description: result.quality.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+        setPreprocessingImage(false);
+        return;
+      }
+
       setDockets((prev) =>
         prev.map((d, i) =>
           i === activeDocketIdx
-            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, preview: reader.result as string }] }
+            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file: result.file, preview: result.preview }] }
             : d
         )
       );
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    } catch (err) {
+      console.error('Preprocessing error:', err);
+      // Fallback: use original image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDockets((prev) =>
+          prev.map((d, i) =>
+            i === activeDocketIdx
+              ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, preview: reader.result as string }] }
+              : d
+          )
+        );
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setPreprocessingImage(false);
+    }
   };
 
   const removeImage = (imageId: string) => {
@@ -193,14 +226,28 @@ const Scan = () => {
           .update({ image_url: imagePaths[0], image_paths: imagePaths } as any)
           .eq('id', receipt.id);
 
-        // 4. Call OCR
-        const { error: ocrError } = await supabase.functions.invoke(
+        // 4. Call OCR (with server-side quality gate)
+        const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
           'process-receipt',
           { body: { receipt_id: receipt.id, image_paths: imagePaths } }
         );
 
         if (ocrError) {
           console.error(`OCR error for docket ${dIdx + 1}:`, ocrError);
+        }
+
+        // Check if server rejected image quality
+        if (ocrData?.rejected) {
+          toast({
+            title: 'Photo quality issue',
+            description: ocrData.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+            variant: 'destructive',
+            duration: 8000,
+          });
+          // Clean up the rejected receipt
+          await supabase.from('receipts').delete().eq('id', receipt.id);
+          receiptIds.pop();
+          continue;
         }
       }
 
@@ -323,8 +370,21 @@ const Scan = () => {
           </div>
         )}
 
+        {/* Preprocessing indicator */}
+        {preprocessingImage && (
+          <Card className="border-primary/30">
+            <CardContent className="flex items-center gap-3 p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div>
+                <p className="text-sm font-medium">Optimising image…</p>
+                <p className="text-xs text-muted-foreground">Enhancing contrast, sharpening text, reducing shadows</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Add image options */}
-        {!processing && (
+        {!processing && !preprocessingImage && (
           <div className="space-y-3">
             {activeDocket.images.length > 0 && (
               <h2 className="font-display font-semibold text-sm text-muted-foreground">

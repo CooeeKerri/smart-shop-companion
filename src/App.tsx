@@ -21,6 +21,7 @@ import Pantry from "./pages/Pantry";
 import MakeOrBuy from "./pages/MakeOrBuy";
 import ImpulseInsights from "./pages/ImpulseInsights";
 import PriceComparison from "./pages/PriceComparison";
+import Specials from "./pages/Specials";
 import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 

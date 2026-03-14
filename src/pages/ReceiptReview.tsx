@@ -26,6 +26,8 @@ interface ReceiptItem {
 interface Docket {
   id: string;
   storeName: string;
+  storeConfidence: number | null;
+  storeReviewRequired: boolean;
   items: ReceiptItem[];
   totalAmount: number | null;
   overallConfidence: number | null;

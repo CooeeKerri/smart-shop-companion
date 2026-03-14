@@ -231,11 +231,55 @@ async function runExtraction(
 
   messageContent.push({
     type: "text",
-    text: `You are an expert Australian grocery receipt OCR system. Extract EVERY LINE ITEM from the receipt image(s).
+    text: `You are an expert Australian grocery receipt OCR system. Extract ONLY real purchasable product items from the receipt image(s).
 
 You are given ${images.length} image(s) that may be PARTS OF THE SAME RECEIPT (a long docket photographed in sections).
 
-STORE DETECTION:
+═══════════════════════════════════════════
+CRITICAL: WHAT TO EXTRACT vs WHAT TO IGNORE
+═══════════════════════════════════════════
+
+EXTRACT — real purchased products only:
+- Grocery items (food, drinks, household products)
+- Weighted/per-kg items (use the FINAL PRICE charged, not the per-kg rate)
+- Multi-buy items (e.g. "2 @ $3.50"): quantity=2, price=3.50 (unit price)
+- Price-reduced / markdown items (is_discount=false, use the reduced price)
+- Separate discount lines that follow an item (is_discount=true, NEGATIVE price)
+
+IGNORE — do NOT include any of these as items:
+- SUBTOTAL, TOTAL, ROUND, BALANCE DUE
+- GST, TAX, TAX INVOICE lines
+- EFTPOS, VISA, MASTERCARD, AMEX, CASH, CARD payment lines
+- CHANGE, TENDER, AMOUNT TENDERED
+- Flybuys, Everyday Rewards, Team Member Discount headers
+- "TOTAL SAVINGS", "YOU SAVED", "MEMBER PRICE SAVING" summary lines
+- Receipt number, date/time lines, register/operator info
+- ABN lines, store address, phone number
+- "THANK YOU", "HAVE A GREAT DAY", promotional messages
+- Bag levy lines (unless it's a purchased reusable bag product)
+- Barcode lines, QR code references
+- "PRICE REDUCED" section headers (but DO extract the items within)
+- Any line that is not a real product the customer took home
+
+═══════════════════════════════════════════
+HANDLING TRICKY RECEIPT FORMATTING
+═══════════════════════════════════════════
+
+1. WRAPPED TEXT: Some items span 2 lines — the product name is on one line and the price on the next. Merge them into a single item.
+2. SEPARATED PRICES: If the item name and price are far apart on the same line, still capture both.
+3. DISCOUNT LINES AFTER ITEMS: Lines like "MEMBER OFFER -$1.00" or "SPECIAL -0.50" that appear directly after an item are discount lines. Set is_discount=true with a NEGATIVE price. Associate them as separate line items (not merged into the product).
+4. ABBREVIATIONS: Decode ALL abbreviations:
+   - "CLS" / "COLES" prefix → Coles brand
+   - "WW" prefix → Woolworths brand  
+   - "MINCE BF 500G" → "Beef Mince 500g"
+   - "F/R" → "Free Range", "O/S" → "On Special"
+   - "CHK" → "Chicken", "VEG" → "Vegetables"
+5. QUANTITY INDICATORS: "2 @", "x2", "QTY 2" all mean quantity=2.
+6. DUPLICATE CHECK: If images overlap, include each unique item ONLY ONCE.
+
+═══════════════════════════════════════════
+STORE DETECTION
+═══════════════════════════════════════════
 - Identify the store from the header. Common Australian stores: Coles, Woolworths, Aldi, IGA, Spudshed, Farmer Jacks, Costco, Harris Farm, FoodWorks, Drakes, NQR
 - Use the FULL store name as printed (e.g. "Coles Supermarkets Australia Pty Ltd")
 
@@ -244,24 +288,17 @@ DATE & TIME:
 - Convert date to ISO format YYYY-MM-DD
 - Time in HH:MM format (24hr)
 
-EXTRACTION RULES:
-1. Go through the receipt LINE BY LINE from top to bottom. Every printed line with a price is an item.
-2. DO NOT SKIP items even if text is partially obscured or abbreviated. Make your best guess.
-3. Decode ALL abbreviations: "CLS MINCE BF 500G" → "Coles Beef Mince 500g", "WW" → "Woolworths"
-4. Look for items in ALL sections: main list, "PRICE REDUCED", markdown, weighted items.
-5. Weighted/per-kg items: extract the FINAL PRICE charged, not the per-kg rate.
-6. Multi-buy items (e.g. "2 @ $3.50"): quantity=2, price=3.50 (unit price).
-7. Lines with %, *, or special characters are still valid items.
-8. DEDUPLICATION: If images overlap, include each unique item ONLY ONCE.
-9. Count items and cross-check against any "TOTAL QTY" shown on receipt.
-
-CONFIDENCE SCORING (0.0-1.0 per item):
+═══════════════════════════════════════════
+CONFIDENCE SCORING (0.0-1.0 per item)
+═══════════════════════════════════════════
 - 1.0: Text clearly readable, price unambiguous
 - 0.7-0.9: Minor abbreviation decoded, price clear
 - 0.4-0.6: Text partially obscured, price or name uncertain
 - 0.1-0.3: Heavily obscured, significant guessing
 
-CLASSIFICATION:
+═══════════════════════════════════════════
+CLASSIFICATION
+═══════════════════════════════════════════
 - Food (is_food=true): ALL edible items — groceries, drinks, produce, meat, seafood, dairy, eggs, bakery, pantry, frozen, snacks, baby food, condiments, sauces, spices, coffee, tea
 - Non-food (is_food=false): cleaning, laundry, toiletries, pet supplies, pet food, stationery, clothing, kitchenware, bags, gift cards, batteries, cosmetics
 
@@ -274,8 +311,8 @@ Return ONLY valid JSON (no markdown fences):
   "receipt_time": "HH:MM or null",
   "items": [
     {
-      "raw_name": "Exact text from receipt line",
-      "clean_name": "Human-readable product name (decode abbreviations)",
+      "raw_name": "Exact text from receipt line(s) — preserve original for traceability",
+      "clean_name": "Human-readable product name (decode abbreviations, merge wrapped lines)",
       "category": "One of the categories above",
       "price": 3.50,
       "quantity": 1,
@@ -289,8 +326,8 @@ Return ONLY valid JSON (no markdown fences):
   "total": 39.30
 }
 
-DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings → is_discount=true, NEGATIVE price.
-IMPORTANT: Double-check you haven't missed any items. Every line with a dollar amount must be captured.`,
+DISCOUNT LINES: Lines showing savings, member discounts, or multi-buy savings → is_discount=true, NEGATIVE price. These are separate items in the array, NOT merged into the product they apply to.
+FINAL CHECK: Review your output. Every item must be a real product. No totals, no payment lines, no loyalty info.`,
   });
 
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

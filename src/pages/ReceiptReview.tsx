@@ -337,15 +337,10 @@ const ReceiptReview = () => {
           </Card>
         )}
 
-      <div className="px-4 space-y-4">
-        {/* Validation warnings */}
+        {/* Detailed validation warnings */}
         {dockets.some((d) => d.warnings.length > 0) && (
-          <Card className="border-warning/40 bg-warning/5">
-            <CardContent className="p-3 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-warning text-xs font-semibold">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                Heads up — please check these:
-              </div>
+          <Card className="border-muted">
+            <CardContent className="p-3 space-y-1">
               {dockets.flatMap((d) => d.warnings).map((w, i) => (
                 <p key={i} className="text-xs text-muted-foreground">• {w}</p>
               ))}

@@ -6,13 +6,20 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Upload, FileText, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ScannedImage {
   id: string;
   file: File;
   preview: string;
+}
+
+interface PendingReceipt {
+  id: string;
+  store_name: string | null;
+  created_at: string;
+  status: string;
 }
 
 const Scan = () => {
@@ -22,6 +29,32 @@ const Scan = () => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<ScannedImage[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
+
+  // Load pending/unconfirmed receipts
+  useState(() => {
+    if (!user) return;
+    supabase
+      .from('receipts')
+      .select('id, store_name, created_at, status')
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'processing'])
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data) setPendingReceipts(data);
+      });
+  });
+
+  const deletePendingReceipt = async (receiptId: string) => {
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+      setPendingReceipts((prev) => prev.filter((r) => r.id !== receiptId));
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -192,6 +225,44 @@ const Scan = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        )}
+
+        {/* Pending / unconfirmed dockets */}
+        {pendingReceipts.length > 0 && !processing && (
+          <div className="space-y-2">
+            <h2 className="font-display font-semibold text-sm text-muted-foreground">
+              Pending dockets
+            </h2>
+            {pendingReceipts.map((r) => (
+              <Card key={r.id}>
+                <CardContent className="flex items-center justify-between p-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {r.store_name || 'Unknown Store'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString()} · {r.status}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/review', { state: { receiptIds: [r.id] } })}
+                    >
+                      Review
+                    </Button>
+                    <button
+                      onClick={() => deletePendingReceipt(r.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
 

@@ -182,6 +182,23 @@ const OccasionChat = () => {
     }
   };
 
+  if (!subLoading && !isPremium) {
+    return (
+      <AppLayout>
+        <div className="px-4 pt-6 pb-4">
+          <h1 className="font-display text-2xl font-bold">Party Planner</h1>
+          <p className="text-sm text-muted-foreground">AI occasion planning assistant</p>
+        </div>
+        <div className="px-4">
+          <UpgradePrompt
+            feature="Party Planner AI"
+            description="Get shopping lists, menu ideas, and budget plans for any special occasion. Upgrade to Premium to unlock."
+          />
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-8rem)]">

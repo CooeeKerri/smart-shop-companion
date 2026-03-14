@@ -224,6 +224,79 @@ Be lenient — slight blur, minor shadows, or partial overlap between photos is 
   }
 }
 
+// ── Store-specific parsing templates ──
+function getStoreTemplate(): string {
+  return `
+
+═══════════════════════════════════════════
+STORE-SPECIFIC PARSING TEMPLATES
+═══════════════════════════════════════════
+After detecting the store from the header, apply the matching template below.
+
+──── COLES ────
+Header: "Coles Supermarkets Australia Pty Ltd", ABN 45 004 089 936
+Item format: Items prefixed with "CLS " (e.g. "CLS MINCE BF 500G"). Strip "CLS " from clean_name.
+Abbreviations: CLS=Coles brand, BF=Beef, CHK=Chicken, F/R=Free Range, S/L=Skinless, ORG=Organic
+Discounts: "MEMBER OFFER", "FLYBUYS OFFER", "PRICES DROPPED" lines appear AFTER the item, negative price.
+Weighted items: Show "X.XXkg @ $Y.YY/kg" on one line, final price on the next. Use final price only.
+Loyalty: "flybuys" section at bottom — IGNORE entirely. "TOTAL SAVINGS" line — IGNORE.
+Totals: "SUBTOTAL", "TOTAL", "ROUND" labels. "ROUND" is a rounding adjustment — IGNORE.
+Date format: DD/MM/YYYY HH:MM on the same line, near the top.
+
+──── WOOLWORTHS ────
+Header: "Woolworths", sometimes "Woolworths Group" or "Woolworths Metro"
+Item format: Items may be prefixed with "WW " (e.g. "WW MILK F/CREAM 2L"). Strip "WW " from clean_name.
+Abbreviations: WW=Woolworths brand, F/CREAM=Full Cream, SM=Skim, L/F=Low Fat, F/F=Full Fat
+Discounts: "MEMBER PRICE", "SPECIAL", "EVERYDAY REWARDS SAVING" lines appear AFTER the item, negative price.
+Weighted items: "NET X.XXkg @ $Y.YY/kg" then final price. Use final price.
+Multi-buy: "X @ $Y.YY" means quantity=X, unit_price=Y.YY.
+Loyalty: "Everyday Rewards" section — IGNORE. "TOTAL SAVINGS THIS SHOP" — IGNORE.
+Totals: "SUBTOTAL", "TOTAL". Sometimes "AMOUNT DUE".
+Date format: DD/MM/YYYY and time HH:MM:SS on separate lines or same line.
+
+──── ALDI ────
+Header: "ALDI" or "ALDI Stores", ABN 90 070 541 833
+Item format: Items are plain text, no store prefix. Names tend to be UPPERCASE and heavily abbreviated.
+Abbreviations: More aggressive shortening — "CHOC" = Chocolate, "ORG" = Organic, "WHL" = Whole, "GRN" = Green
+Discounts: Aldi rarely shows per-item discounts. Look for "SPECIAL BUY" items at regular price.
+Weighted items: "X.XXkg NET @ $Y.YY/kg" with final price on the next line.
+Loyalty: No loyalty program — no lines to ignore for this.
+Totals: "TOTAL", "SUBTOTAL", "GST INCLUDED". "ROUNDING" — IGNORE.
+Date format: DD.MM.YYYY or DD/MM/YYYY, time HH:MM.
+
+──── IGA ────
+Header: Varies by franchise — "IGA", "IGA Supermarket", "Supa IGA", "IGA Xpress", or the franchise owner name.
+Item format: No consistent prefix. Names are UPPERCASE, moderate abbreviation.
+Abbreviations: Standard Australian grocery abbreviations apply.
+Discounts: "SPECIAL", "MEMBER SPECIAL", "IGA REWARDS" lines after items.
+Weighted items: Similar to Coles/Woolworths format.
+Loyalty: "IGA Rewards" — IGNORE summary lines.
+Totals: "SUBTOTAL", "TOTAL", "GST". Some franchises show "AMOUNT" instead of "TOTAL".
+Date format: DD/MM/YYYY HH:MM, position varies by franchise.
+
+──── SPUDSHED ────
+Header: "Spudshed" or "Spud Shed", ABN 16 138 344 668
+Item format: Plain text, UPPERCASE. Heavy on fresh produce with weight-based pricing.
+Discounts: Minimal discount lines. "PRICE DROP" occasionally.
+Totals: "TOTAL", "SUBTOTAL".
+Date format: DD/MM/YYYY.
+
+──── FARMER JACKS ────
+Header: "Farmer Jacks" or "Farmer Jack's"
+Item format: Plain text, UPPERCASE. Similar to IGA formatting.
+Discounts: "SPECIAL" lines after items.
+Totals: "SUBTOTAL", "TOTAL".
+Date format: DD/MM/YYYY.
+
+──── UNKNOWN / GENERIC ────
+If you cannot match any of the above stores, use generic parsing:
+- Extract all lines with prices as items
+- Use standard abbreviation decoding
+- Mark confidence lower (0.5-0.7 range for most items)
+- Still ignore totals, payment lines, loyalty text
+`;
+}
+
 // ── PASS 1: AI Extraction ──
 async function runExtraction(
   images: { base64: string; mimeType: string }[],
@@ -233,6 +306,8 @@ async function runExtraction(
     type: "image_url",
     image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
   }));
+
+  const storeTemplates = getStoreTemplate();
 
   messageContent.push({
     type: "text",

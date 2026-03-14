@@ -138,6 +138,40 @@ const ShopHistory = () => {
     });
   };
 
+  const deleteReceipt = async (receiptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('meal_suggestions').delete().eq('receipt_id', receiptId);
+      await supabase.from('recommendations').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+
+      setMonthGroups((prev) =>
+        prev
+          .map((g) => ({
+            ...g,
+            receipts: g.receipts.filter((r) => r.id !== receiptId),
+            shopCount: g.receipts.filter((r) => r.id !== receiptId).length,
+            totalSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + Number(r.total_amount || 0), 0),
+            foodSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + r.food_total, 0),
+            nonFoodSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + r.non_food_total, 0),
+          }))
+          .filter((g) => g.receipts.length > 0)
+      );
+
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
+
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">

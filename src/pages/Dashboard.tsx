@@ -98,6 +98,20 @@ const Dashboard = () => {
     }
   };
 
+  const deleteReceipt = async (receiptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('meal_suggestions').delete().eq('receipt_id', receiptId);
+      await supabase.from('recommendations').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+      setRecentReceipts((prev) => prev.filter((r) => r.id !== receiptId));
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
+
   const currentMonth = new Date().toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
 
   return (

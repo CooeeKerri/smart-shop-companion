@@ -230,6 +230,9 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* Category spending breakdown */}
+        <CategoryBreakdown />
+
         {/* Recent receipts */}
         <Card>
           <CardHeader className="pb-2">

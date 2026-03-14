@@ -151,7 +151,38 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Monthly stats */}
+        {/* AI Assistants */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => navigate('/budget-chat')}
+          >
+            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Bot className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Budget Mate</p>
+                <p className="text-xs text-muted-foreground">Grocery budget help</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => navigate('/occasion-chat')}
+          >
+            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <PartyPopper className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Party Planner</p>
+                <p className="text-xs text-muted-foreground">Special occasion ideas</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <Card>
             <CardContent className="p-4">

@@ -23,6 +23,13 @@ interface ReceiptItem {
   confidence: number | null;
 }
 
+interface ConfidenceBreakdown {
+  date_confidence: number;
+  total_confidence: number;
+  item_extraction_confidence: number;
+  needs_review: boolean;
+}
+
 interface Docket {
   id: string;
   storeName: string;
@@ -31,6 +38,7 @@ interface Docket {
   items: ReceiptItem[];
   totalAmount: number | null;
   overallConfidence: number | null;
+  confidenceBreakdown: ConfidenceBreakdown | null;
   warnings: string[];
 }
 

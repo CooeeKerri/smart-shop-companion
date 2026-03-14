@@ -6,7 +6,8 @@ import AppLayout from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Store, Calendar, Receipt, DollarSign, ChevronDown, ChevronUp, TrendingDown, TrendingUp } from 'lucide-react';
+import { Store, Calendar, Receipt, DollarSign, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Trash2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface ReceiptWithItems {
   id: string;
@@ -137,6 +138,40 @@ const ShopHistory = () => {
     });
   };
 
+  const deleteReceipt = async (receiptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('meal_suggestions').delete().eq('receipt_id', receiptId);
+      await supabase.from('recommendations').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+
+      setMonthGroups((prev) =>
+        prev
+          .map((g) => ({
+            ...g,
+            receipts: g.receipts.filter((r) => r.id !== receiptId),
+            shopCount: g.receipts.filter((r) => r.id !== receiptId).length,
+            totalSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + Number(r.total_amount || 0), 0),
+            foodSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + r.food_total, 0),
+            nonFoodSpent: g.receipts
+              .filter((r) => r.id !== receiptId)
+              .reduce((s, r) => s + r.non_food_total, 0),
+          }))
+          .filter((g) => g.receipts.length > 0)
+      );
+
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
+
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
@@ -262,18 +297,28 @@ const ShopHistory = () => {
                               {receipt.item_count} items
                             </p>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-semibold">
-                              ${Number(receipt.total_amount || 0).toFixed(2)}
-                            </p>
-                            {receipt.non_food_total > 0 && (
-                              <p className="text-[10px] text-muted-foreground">
-                                ${receipt.food_total.toFixed(2)} food
+                          <div className="text-right shrink-0 flex items-center gap-2">
+                            <div>
+                              <p className="text-sm font-semibold">
+                                ${Number(receipt.total_amount || 0).toFixed(2)}
                               </p>
-                            )}
+                              {receipt.non_food_total > 0 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  ${receipt.food_total.toFixed(2)} food
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => deleteReceipt(receipt.id, e)}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                              title="Delete this docket"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                       ))}
+
                     </div>
                   </CardContent>
                 )}

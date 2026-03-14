@@ -15,6 +15,13 @@ interface ScannedImage {
   preview: string;
 }
 
+interface PendingReceipt {
+  id: string;
+  store_name: string | null;
+  created_at: string;
+  status: string;
+}
+
 const Scan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -22,6 +29,32 @@ const Scan = () => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<ScannedImage[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
+
+  // Load pending/unconfirmed receipts
+  useState(() => {
+    if (!user) return;
+    supabase
+      .from('receipts')
+      .select('id, store_name, created_at, status')
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'processing'])
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data) setPendingReceipts(data);
+      });
+  });
+
+  const deletePendingReceipt = async (receiptId: string) => {
+    try {
+      await supabase.from('receipt_items').delete().eq('receipt_id', receiptId);
+      await supabase.from('receipts').delete().eq('id', receiptId);
+      setPendingReceipts((prev) => prev.filter((r) => r.id !== receiptId));
+      toast({ title: 'Docket deleted' });
+    } catch (err) {
+      toast({ title: 'Error deleting docket', variant: 'destructive' });
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

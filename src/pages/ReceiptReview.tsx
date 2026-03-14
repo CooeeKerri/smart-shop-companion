@@ -17,6 +17,7 @@ interface ReceiptItem {
   price: number;
   quantity: number;
   is_discount: boolean;
+  is_food: boolean;
 }
 
 interface Docket {

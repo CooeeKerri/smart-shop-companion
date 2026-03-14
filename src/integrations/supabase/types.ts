@@ -17,45 +17,69 @@ export type Database = {
       households: {
         Row: {
           adults: number
+          brand_preference: string | null
           budget_priority: string
+          bulk_buying: boolean | null
           child_ages: string | null
           children: number
+          cooking_skill: string | null
           created_at: string
           dietary_preferences: string | null
           disliked_foods: string | null
           household_type: string
           id: string
+          leftover_comfort: string | null
+          meal_planning: string | null
           preferred_meal_count: number
+          preferred_stores: string | null
+          shopping_frequency: string | null
           updated_at: string
           user_id: string
+          weekly_budget: string | null
         }
         Insert: {
           adults?: number
+          brand_preference?: string | null
           budget_priority?: string
+          bulk_buying?: boolean | null
           child_ages?: string | null
           children?: number
+          cooking_skill?: string | null
           created_at?: string
           dietary_preferences?: string | null
           disliked_foods?: string | null
           household_type?: string
           id?: string
+          leftover_comfort?: string | null
+          meal_planning?: string | null
           preferred_meal_count?: number
+          preferred_stores?: string | null
+          shopping_frequency?: string | null
           updated_at?: string
           user_id: string
+          weekly_budget?: string | null
         }
         Update: {
           adults?: number
+          brand_preference?: string | null
           budget_priority?: string
+          bulk_buying?: boolean | null
           child_ages?: string | null
           children?: number
+          cooking_skill?: string | null
           created_at?: string
           dietary_preferences?: string | null
           disliked_foods?: string | null
           household_type?: string
           id?: string
+          leftover_comfort?: string | null
+          meal_planning?: string | null
           preferred_meal_count?: number
+          preferred_stores?: string | null
+          shopping_frequency?: string | null
           updated_at?: string
           user_id?: string
+          weekly_budget?: string | null
         }
         Relationships: []
       }

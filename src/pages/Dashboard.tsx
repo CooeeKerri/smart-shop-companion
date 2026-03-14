@@ -129,7 +129,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">G'day, {firstName}! 👋</h1>
+        <h1 className="font-display text-2xl font-bold">G'day, {greeting}! 👋</h1>
         <p className="text-sm text-muted-foreground">Here's your {currentMonth} summary</p>
       </div>
 

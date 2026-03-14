@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
 import RegularStores from '@/components/RegularStores';
+import CategoryBreakdown from '@/components/CategoryBreakdown';
 import { toast } from '@/hooks/use-toast';
 
 interface ReceiptSummary {
@@ -228,6 +229,9 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Category spending breakdown */}
+        <CategoryBreakdown />
 
         {/* Recent receipts */}
         <Card>

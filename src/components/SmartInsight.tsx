@@ -41,11 +41,11 @@ const SmartInsight = ({ receiptIds }: SmartInsightProps) => {
     // Pick the most impactful insight
     if (swapRecs.length > 0 && totalPotentialSaving > 0) {
       setInsight(
-        `You bought ${swapRecs.length} branded ${swapRecs.length === 1 ? 'item' : 'items'} that ${swapRecs.length === 1 ? 'has a' : 'have'} cheaper alternative${swapRecs.length === 1 ? '' : 's'}. Switching to store brand could save you $${totalPotentialSaving.toFixed(2)} next time.`
+        `Heads up — ${swapRecs.length} ${swapRecs.length === 1 ? 'item has' : 'items have'} a cheaper option. You could shave $${totalPotentialSaving.toFixed(2)} off your next shop by switching to home brand.`
       );
     } else if (totalSaved > 0) {
       setInsight(
-        `Nice one — you saved $${totalSaved.toFixed(2)} on discounts this shop. Keep an eye on specials to save even more next time.`
+        `Nice one — you saved $${totalSaved.toFixed(2)} on specials this shop! Keep hunting those markdowns and you'll stretch your budget even further.`
       );
     } else {
       // Fallback: category-based insight
@@ -57,7 +57,7 @@ const SmartInsight = ({ receiptIds }: SmartInsightProps) => {
       const topCat = Object.entries(categories).sort((a, b) => b[1] - a[1])[0];
       if (topCat) {
         setInsight(
-          `Your biggest spend was ${topCat[0]} at $${topCat[1].toFixed(2)}. Comparing prices here could stretch your budget further.`
+          `Your biggest spend was ${topCat[0]} at $${topCat[1].toFixed(2)}. Reckon you could find better deals here — worth a look next time.`
         );
       }
     }

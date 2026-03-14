@@ -1,0 +1,1 @@
+CREATE POLICY "Service can delete recommendations" ON public.recommendations FOR DELETE TO authenticated USING (EXISTS ( SELECT 1 FROM receipts WHERE receipts.id = recommendations.receipt_id AND receipts.user_id = auth.uid()));

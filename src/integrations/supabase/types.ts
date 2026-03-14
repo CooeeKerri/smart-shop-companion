@@ -299,12 +299,46 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          scans_this_week: number
+          tier: string
+          updated_at: string
+          user_id: string
+          week_reset_at: string
+          weekly_scan_limit: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          scans_this_week?: number
+          tier?: string
+          updated_at?: string
+          user_id: string
+          week_reset_at?: string
+          weekly_scan_limit?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          scans_this_week?: number
+          tier?: string
+          updated_at?: string
+          user_id?: string
+          week_reset_at?: string
+          weekly_scan_limit?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_and_increment_scan: { Args: never; Returns: Json }
+      get_subscription_info: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

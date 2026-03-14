@@ -10,6 +10,8 @@ import {
   Camera, Upload, FileText, X, ArrowRight, Loader2, Trash2, Plus, ShoppingCart, Check,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface ScannedImage {
   id: string;
@@ -32,6 +34,7 @@ interface PendingReceipt {
 const Scan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { scansRemaining, scanLimit, scansUsed, isPremium, loading: subLoading } = useSubscription();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,6 +119,33 @@ const Scan = () => {
 
   const processAllDockets = async () => {
     if (!user || docketsWithImages.length === 0) return;
+
+    // Check scan limit for free users
+    if (!isPremium && scansRemaining < docketsWithImages.length) {
+      toast({
+        title: 'Weekly scan limit reached',
+        description: `Free plan allows ${scanLimit} scans per week. You have ${scansRemaining} remaining. Upgrade to Premium for unlimited scans.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Increment scan counter for each docket
+    if (!isPremium) {
+      for (let i = 0; i < docketsWithImages.length; i++) {
+        const { data } = await supabase.rpc('check_and_increment_scan');
+        const d = data as any;
+        if (!d?.allowed) {
+          toast({
+            title: 'Scan limit reached',
+            description: 'Upgrade to Premium for unlimited scans.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+    }
+
     setProcessing(true);
 
     const receiptIds: string[] = [];
@@ -199,6 +229,13 @@ const Scan = () => {
         <p className="text-sm text-muted-foreground">
           Add photos of one or more receipts — we'll process them all together
         </p>
+        {!isPremium && !subLoading && (
+          <div className="mt-2 flex items-center gap-2">
+            <Badge variant={scansRemaining > 0 ? 'secondary' : 'destructive'} className="text-xs">
+              {scansRemaining}/{scanLimit} scans left this week
+            </Badge>
+          </div>
+        )}
       </div>
 
       <div className="px-4 space-y-4">

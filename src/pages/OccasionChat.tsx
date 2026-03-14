@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
@@ -8,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Send, PartyPopper, User, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { useSubscription } from '@/hooks/useSubscription';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -27,6 +30,8 @@ const quickPrompts = [
 
 const OccasionChat = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isPremium, loading: subLoading } = useSubscription();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -176,6 +181,23 @@ const OccasionChat = () => {
       setIsLoading(false);
     }
   };
+
+  if (!subLoading && !isPremium) {
+    return (
+      <AppLayout>
+        <div className="px-4 pt-6 pb-4">
+          <h1 className="font-display text-2xl font-bold">Party Planner</h1>
+          <p className="text-sm text-muted-foreground">AI occasion planning assistant</p>
+        </div>
+        <div className="px-4">
+          <UpgradePrompt
+            feature="Party Planner AI"
+            description="Get shopping lists, menu ideas, and budget plans for any special occasion. Upgrade to Premium to unlock."
+          />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

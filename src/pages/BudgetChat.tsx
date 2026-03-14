@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
@@ -8,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { useSubscription } from '@/hooks/useSubscription';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -18,6 +21,8 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/budget-chat`
 
 const BudgetChat = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isPremium, loading: subLoading } = useSubscription();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -188,6 +193,23 @@ const BudgetChat = () => {
       setIsLoading(false);
     }
   };
+
+  if (!subLoading && !isPremium) {
+    return (
+      <AppLayout>
+        <div className="px-4 pt-6 pb-4">
+          <h1 className="font-display text-2xl font-bold">Budget Mate</h1>
+          <p className="text-sm text-muted-foreground">AI grocery budget assistant</p>
+        </div>
+        <div className="px-4">
+          <UpgradePrompt
+            feature="Budget Mate AI"
+            description="Get personalised grocery budget advice, savings tips, and meal planning help. Upgrade to Premium to unlock."
+          />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

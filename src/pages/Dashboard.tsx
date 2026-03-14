@@ -222,8 +222,8 @@ const Dashboard = () => {
               <Camera className="h-7 w-7" />
             </div>
             <div className="flex-1">
-              <h2 className="font-display font-semibold">Scan a receipt</h2>
-              <p className="text-sm text-muted-foreground">Upload your docket to get started</p>
+              <h2 className="font-display font-semibold">Back from the shops?</h2>
+              <p className="text-sm text-muted-foreground">Scan your docket — we'll handle the rest</p>
             </div>
             <Button size="sm" onClick={() => navigate('/scan')}>
               Scan <ArrowRight className="ml-1 h-3 w-3" />

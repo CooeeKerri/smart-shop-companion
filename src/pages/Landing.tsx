@@ -90,7 +90,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="border-t px-4 py-6 text-center text-sm text-muted-foreground">
-        <p>Made for Aussie families who shop smart 🇦🇺</p>
+        <p>For people who shop first and figure it out later 🇦🇺</p>
       </footer>
     </div>
   );

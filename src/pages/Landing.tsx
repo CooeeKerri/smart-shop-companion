@@ -5,23 +5,23 @@ import { Receipt, ShoppingCart, UtensilsCrossed, TrendingDown, ArrowRight, Spark
 const features = [
   {
     icon: Receipt,
-    title: 'Scan your docket',
-    description: 'Upload or photograph your grocery receipt and we\'ll extract every item automatically.',
-  },
-  {
-    icon: TrendingDown,
-    title: 'Spot savings',
-    description: 'See what was great value and where you could save next time with cheaper swaps.',
+    title: 'Just scan your docket',
+    description: 'No meal planning. No lists. Just snap your receipt after shopping — we do the rest.',
   },
   {
     icon: UtensilsCrossed,
-    title: 'Get meal ideas',
-    description: 'Realistic, family-friendly meals based on what you actually bought — not a fantasy list.',
+    title: 'Use what you bought',
+    description: 'We show you what to make with what\'s already in your kitchen. No extra trips.',
+  },
+  {
+    icon: TrendingDown,
+    title: 'Waste less, spend less',
+    description: 'See where your money went and quietly build better shopping habits over time.',
   },
   {
     icon: ShoppingCart,
-    title: 'Healthier swaps',
-    description: 'Simple suggestions for healthier alternatives you can pick up on your next shop.',
+    title: 'Zero effort required',
+    description: 'No food diaries. No guilt. Just small, smart nudges after every shop.',
   },
 ];
 

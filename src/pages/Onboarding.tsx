@@ -46,7 +46,7 @@ const Onboarding = () => {
       budget_priority: form.budgetPriority,
       preferred_meal_count: parseInt(form.mealCount),
       disliked_foods: form.dislikedFoods,
-    });
+    } as any);
 
     setLoading(false);
 

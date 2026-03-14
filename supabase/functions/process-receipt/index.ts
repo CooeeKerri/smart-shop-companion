@@ -583,6 +583,7 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
   const items = (parsed.items || []).map((item: any) => ({
     raw_name: item.raw_name || "",
     clean_name: item.clean_name || item.raw_name || "",
+    ingredient_keyword: item.ingredient_keyword || null,
     category: item.category || "Other",
     price: typeof item.price === "number" ? item.price : parseFloat(item.price) || 0,
     quantity: item.quantity || 1,

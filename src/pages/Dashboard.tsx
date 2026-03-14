@@ -229,6 +229,8 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+        {/* Purchase insights & restock alerts */}
+        <PurchaseInsights />
       </div>
     </AppLayout>
   );

@@ -141,12 +141,22 @@ const PurchaseInsights = () => {
 
           const restockDue = avgDays !== null && daysSinceLast >= avgDays * 0.8;
 
+          // Price alert: find last non-discount price and compare to average
+          const sortedPrices = a.prices
+            .sort((x, y) => new Date(x.date).getTime() - new Date(y.date).getTime());
+          const lastNonDiscount = [...sortedPrices].reverse().find((p) => !p.isDiscount);
+          const avgPrice = a.totalSpent / a.totalQty;
+          const lastPrice = lastNonDiscount?.price ?? null;
+          const priceAlert = lastPrice !== null && lastPrice > avgPrice * 1.05; // 5%+ above avg
+
           return {
             clean_name: a.name,
             category: a.category,
             total_qty: a.totalQty,
             purchase_count: a.dates.length,
-            avg_price: a.totalSpent / a.totalQty,
+            avg_price: avgPrice,
+            last_price: lastPrice,
+            price_alert: priceAlert,
             last_purchased: lastDate.toISOString(),
             days_since_last: daysSinceLast,
             avg_days_between: avgDays,

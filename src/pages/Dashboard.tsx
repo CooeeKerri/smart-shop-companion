@@ -6,12 +6,13 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat, Tag } from 'lucide-react';
+import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2, Bot, PartyPopper, Crown, Lock, Package, Calculator, Zap, ArrowLeftRight, ChefHat, Tag, Loader2, Sparkles, X } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
 import RegularStores from '@/components/RegularStores';
 import CategoryBreakdown from '@/components/CategoryBreakdown';
 import { toast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
+import ReactMarkdown from 'react-markdown';
 
 interface ReceiptSummary {
   id: string;
@@ -43,7 +44,8 @@ const Dashboard = () => {
     avgPerShop: 0,
   });
   const [loading, setLoading] = useState(true);
-
+  const [cookingSuggestion, setCookingSuggestion] = useState<string | null>(null);
+  const [cookingLoading, setCookingLoading] = useState(false);
   const greeting = displayName || user?.email?.split('@')[0] || 'there';
 
   useEffect(() => {
@@ -128,6 +130,36 @@ const Dashboard = () => {
     }
   };
 
+  const askWhatToCook = async () => {
+    setCookingLoading(true);
+    setCookingSuggestion(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/what-to-cook`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Failed' }));
+        toast({ title: err.error || 'Something went wrong', variant: 'destructive' });
+        return;
+      }
+      const data = await resp.json();
+      setCookingSuggestion(data.suggestion);
+    } catch (e) {
+      console.error('Cook suggestion error:', e);
+      toast({ title: 'Failed to get suggestions', variant: 'destructive' });
+    } finally {
+      setCookingLoading(false);
+    }
+  };
+
   const currentMonth = new Date().toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
 
   return (
@@ -138,6 +170,41 @@ const Dashboard = () => {
       </div>
 
       <div className="px-4 space-y-4">
+        {/* What Should I Cook? */}
+        <Button
+          className="w-full h-16 text-lg font-display font-bold gap-3 shadow-lg shadow-primary/20"
+          size="lg"
+          onClick={askWhatToCook}
+          disabled={cookingLoading}
+        >
+          {cookingLoading ? (
+            <><Loader2 className="h-6 w-6 animate-spin" /> Thinking…</>
+          ) : (
+            <><Sparkles className="h-6 w-6" /> What Should I Cook?</>
+          )}
+        </Button>
+
+        {/* Cooking suggestion */}
+        {cookingSuggestion && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent animate-fade-in">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-display text-base flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4 text-primary" /> Tonight's ideas
+                </span>
+                <button onClick={() => setCookingSuggestion(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none dark:prose-invert text-sm [&>p]:mb-2 [&>ul]:mb-2">
+                <ReactMarkdown>{cookingSuggestion}</ReactMarkdown>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Scan CTA */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-sm">
           <CardContent className="flex items-center gap-4 p-5">

@@ -269,6 +269,8 @@ const ReceiptReview = () => {
               category: item.category,
               price: item.price,
               quantity: item.quantity,
+              is_food: item.is_food,
+              is_discount: item.is_discount,
             })
             .eq('id', item.id);
         }

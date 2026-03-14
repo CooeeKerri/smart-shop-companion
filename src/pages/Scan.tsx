@@ -77,21 +77,53 @@ const Scan = () => {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [preprocessingImage, setPreprocessingImage] = useState(false);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    e.target.value = '';
+
+    setPreprocessingImage(true);
+
+    try {
+      const result = await preprocessReceiptImage(file);
+
+      if (!result.quality.ok) {
+        toast({
+          title: 'Photo quality issue',
+          description: result.quality.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+          variant: 'destructive',
+          duration: 6000,
+        });
+        setPreprocessingImage(false);
+        return;
+      }
+
       setDockets((prev) =>
         prev.map((d, i) =>
           i === activeDocketIdx
-            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, preview: reader.result as string }] }
+            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file: result.file, preview: result.preview }] }
             : d
         )
       );
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    } catch (err) {
+      console.error('Preprocessing error:', err);
+      // Fallback: use original image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDockets((prev) =>
+          prev.map((d, i) =>
+            i === activeDocketIdx
+              ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, preview: reader.result as string }] }
+              : d
+          )
+        );
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setPreprocessingImage(false);
+    }
   };
 
   const removeImage = (imageId: string) => {

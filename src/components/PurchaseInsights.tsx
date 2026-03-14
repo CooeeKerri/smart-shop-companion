@@ -214,6 +214,38 @@ const PurchaseInsights = () => {
         </Card>
       )}
 
+      {/* Price Alerts - items not on special / overpriced */}
+      {items.filter((i) => i.price_alert).length > 0 && (
+        <Card className="border-destructive/30 bg-gradient-to-br from-destructive/5 to-transparent">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 font-display text-base">
+              <Bell className="h-4 w-4 text-destructive" />
+              Price alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground mb-3">
+              These regulars cost more than usual — they may not be on special
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {items.filter((i) => i.price_alert).slice(0, 8).map((item) => (
+                <Badge
+                  key={item.clean_name}
+                  variant="outline"
+                  className="border-destructive/30 bg-destructive/10 text-foreground gap-1.5 py-1.5 px-3"
+                >
+                  <Bell className="h-3 w-3 text-destructive" />
+                  <span className="font-medium">{item.clean_name}</span>
+                  <span className="text-muted-foreground text-[10px]">
+                    · ${item.last_price?.toFixed(2)} vs ${item.avg_price.toFixed(2)} avg
+                  </span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Most Purchased */}
       <Card>
         <CardHeader className="pb-2">

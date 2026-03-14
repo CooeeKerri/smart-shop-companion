@@ -6,6 +6,7 @@ import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar } from 'lucide-react';
+import PurchaseInsights from '@/components/PurchaseInsights';
 
 interface ReceiptSummary {
   id: string;

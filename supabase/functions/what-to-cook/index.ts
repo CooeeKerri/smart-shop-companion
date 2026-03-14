@@ -93,21 +93,21 @@ Deno.serve(async (req) => {
       householdContext = `\nHousehold: ${parts.join(", ")}`;
     }
 
-    const prompt = `You are a friendly Australian meal suggestion assistant. Based on the user's recent grocery purchases, suggest 3 quick, practical meals they can make tonight or this week.
+    const prompt = `You help people use the groceries they already bought. You're not a recipe app — you're a gentle nudge to help them waste less and feel good about their shop.
 
 Recent purchases from ${stores}: ${itemList}${householdContext}
 
 Rules:
-- Suggest exactly 3 meals — one quick (under 20 min), one hearty family meal, one creative/fun option
-- Each meal should primarily use ingredients from their purchases
-- Mention which purchased items each meal uses
-- Note any common pantry staples needed (oil, salt, garlic etc)
-- Use a warm, encouraging Australian tone
-- Keep it concise — max 3-4 lines per meal
-- Add a cooking time estimate
-- End with one fun tip about using up perishables first
+- Suggest exactly 3 simple ideas — not fancy recipes, just "here's what you could do with what you've got"
+- Frame each one positively: "You grabbed X — that's great for…"
+- Keep it dead simple. No chef language. Think "throw it together" not "prepare a mise en place"
+- Mention which of THEIR items each idea uses — make them feel smart for buying them
+- If something is perishable, gently note it: "Use your chicken first — it won't last long"
+- Use a warm, casual Australian tone. Brief. Friendly. Zero pressure.
+- Max 2-3 lines per idea
+- End with one encouraging line about reducing waste — keep it light, never preachy
 
-Format with markdown: use **bold** for meal names and bullet points for the list.`;
+Format: use **bold** for the idea name, bullet points for the list. Keep it short and scannable.`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

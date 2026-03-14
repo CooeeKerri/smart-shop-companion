@@ -157,34 +157,56 @@ const Dashboard = () => {
         {/* AI Assistants */}
         <div className="grid grid-cols-2 gap-3">
           <Card
-            className="cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => navigate('/budget-chat')}
+            className={`cursor-pointer transition-colors ${isPremium ? 'hover:bg-muted/50' : 'opacity-75'}`}
+            onClick={() => isPremium ? navigate('/budget-chat') : toast({ title: 'Premium feature', description: 'Upgrade to access Budget Mate AI assistant.' })}
           >
             <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 relative">
                 <Bot className="h-5 w-5 text-primary" />
+                {!isPremium && <Lock className="h-3 w-3 text-muted-foreground absolute -bottom-0.5 -right-0.5" />}
               </div>
               <div>
                 <p className="text-sm font-semibold">Budget Mate</p>
-                <p className="text-xs text-muted-foreground">Grocery budget help</p>
+                <p className="text-xs text-muted-foreground">{isPremium ? 'Grocery budget help' : 'Premium feature'}</p>
               </div>
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => navigate('/occasion-chat')}
+            className={`cursor-pointer transition-colors ${isPremium ? 'hover:bg-muted/50' : 'opacity-75'}`}
+            onClick={() => isPremium ? navigate('/occasion-chat') : toast({ title: 'Premium feature', description: 'Upgrade to access Party Planner AI assistant.' })}
           >
             <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 relative">
                 <PartyPopper className="h-5 w-5 text-primary" />
+                {!isPremium && <Lock className="h-3 w-3 text-muted-foreground absolute -bottom-0.5 -right-0.5" />}
               </div>
               <div>
                 <p className="text-sm font-semibold">Party Planner</p>
-                <p className="text-xs text-muted-foreground">Special occasion ideas</p>
+                <p className="text-xs text-muted-foreground">{isPremium ? 'Special occasion ideas' : 'Premium feature'}</p>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Scan usage for free users */}
+        {!isPremium && !subLoading && (
+          <Card className="border-dashed">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Weekly scans</p>
+                <p className="text-xs text-muted-foreground">{scansRemaining} of {scanLimit} remaining</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={scansRemaining > 0 ? 'secondary' : 'destructive'}>
+                  {scansRemaining}/{scanLimit}
+                </Badge>
+                <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => toast({ title: 'Coming soon!', description: 'Premium subscriptions will be available shortly.' })}>
+                  <Crown className="h-3 w-3 mr-1" /> Upgrade
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Card>

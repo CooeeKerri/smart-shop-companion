@@ -30,6 +30,8 @@ const quickPrompts = [
 
 const OccasionChat = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isPremium, loading: subLoading } = useSubscription();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',

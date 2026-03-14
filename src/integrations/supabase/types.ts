@@ -14,7 +14,261 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      households: {
+        Row: {
+          adults: number
+          budget_priority: string
+          child_ages: string | null
+          children: number
+          created_at: string
+          dietary_preferences: string | null
+          disliked_foods: string | null
+          household_type: string
+          id: string
+          preferred_meal_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adults?: number
+          budget_priority?: string
+          child_ages?: string | null
+          children?: number
+          created_at?: string
+          dietary_preferences?: string | null
+          disliked_foods?: string | null
+          household_type?: string
+          id?: string
+          preferred_meal_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adults?: number
+          budget_priority?: string
+          child_ages?: string | null
+          children?: number
+          created_at?: string
+          dietary_preferences?: string | null
+          disliked_foods?: string | null
+          household_type?: string
+          id?: string
+          preferred_meal_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meal_suggestions: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          ingredients: Json | null
+          pantry_staples: Json | null
+          reason: string | null
+          receipt_id: string
+          serves: number | null
+          title: string
+          use_first: boolean | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          ingredients?: Json | null
+          pantry_staples?: Json | null
+          reason?: string | null
+          receipt_id: string
+          serves?: number | null
+          title: string
+          use_first?: boolean | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          ingredients?: Json | null
+          pantry_staples?: Json | null
+          reason?: string | null
+          receipt_id?: string
+          serves?: number | null
+          title?: string
+          use_first?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_suggestions_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      receipt_items: {
+        Row: {
+          category: string | null
+          clean_name: string | null
+          created_at: string
+          id: string
+          is_discount: boolean | null
+          price: number | null
+          quantity: number
+          raw_name: string | null
+          receipt_id: string
+        }
+        Insert: {
+          category?: string | null
+          clean_name?: string | null
+          created_at?: string
+          id?: string
+          is_discount?: boolean | null
+          price?: number | null
+          quantity?: number
+          raw_name?: string | null
+          receipt_id: string
+        }
+        Update: {
+          category?: string | null
+          clean_name?: string | null
+          created_at?: string
+          id?: string
+          is_discount?: boolean | null
+          price?: number | null
+          quantity?: number
+          raw_name?: string | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      receipts: {
+        Row: {
+          created_at: string
+          health_score: number | null
+          id: string
+          image_url: string | null
+          meal_potential_score: number | null
+          raw_ocr_text: string | null
+          shop_date: string | null
+          status: string
+          store_name: string | null
+          total_amount: number | null
+          updated_at: string
+          user_id: string
+          value_score: number | null
+          waste_risk_score: number | null
+        }
+        Insert: {
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          image_url?: string | null
+          meal_potential_score?: number | null
+          raw_ocr_text?: string | null
+          shop_date?: string | null
+          status?: string
+          store_name?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id: string
+          value_score?: number | null
+          waste_risk_score?: number | null
+        }
+        Update: {
+          created_at?: string
+          health_score?: number | null
+          id?: string
+          image_url?: string | null
+          meal_potential_score?: number | null
+          raw_ocr_text?: string | null
+          shop_date?: string | null
+          status?: string
+          store_name?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string
+          value_score?: number | null
+          waste_risk_score?: number | null
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          created_at: string
+          current_item: string
+          id: string
+          potential_saving: number | null
+          reason: string | null
+          receipt_id: string
+          suggested_item: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          current_item: string
+          id?: string
+          potential_saving?: number | null
+          reason?: string | null
+          receipt_id: string
+          suggested_item: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          current_item?: string
+          id?: string
+          potential_saving?: number | null
+          reason?: string | null
+          receipt_id?: string
+          suggested_item?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

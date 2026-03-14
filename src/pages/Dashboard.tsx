@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, TrendingUp, UtensilsCrossed, DollarSign, ArrowRight, ShoppingCart, Store, Calendar, Trash2 } from 'lucide-react';
 import PurchaseInsights from '@/components/PurchaseInsights';
+import RegularStores from '@/components/RegularStores';
 import { toast } from '@/hooks/use-toast';
 
 interface ReceiptSummary {
@@ -265,6 +266,8 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+        {/* Regular shopping locations */}
+        <RegularStores />
         {/* Purchase insights & restock alerts */}
         <PurchaseInsights />
       </div>

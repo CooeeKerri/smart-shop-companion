@@ -109,10 +109,10 @@ const Scan = () => {
         imagePaths.push(storagePath);
       }
 
-      // 3. Update receipt with first image path
+      // 3. Update receipt with image paths
       await supabase
         .from('receipts')
-        .update({ image_url: imagePaths[0] })
+        .update({ image_url: imagePaths[0], image_paths: imagePaths } as any)
         .eq('id', receipt.id);
 
       // 4. Call OCR edge function with ALL images at once

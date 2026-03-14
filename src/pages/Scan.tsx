@@ -182,6 +182,7 @@ const Scan = () => {
     setProcessing(true);
 
     const receiptIds: string[] = [];
+    let needsReviewCount = 0;
 
     try {
       setProcessingProgress({ current: 0, total: docketsWithImages.length });
@@ -249,10 +250,33 @@ const Scan = () => {
           receiptIds.pop();
           continue;
         }
+
+        // Track if any receipt needs review
+        if (ocrData?.needs_review) {
+          needsReviewCount++;
+        }
       }
 
-      // Navigate to review with ALL receipt IDs
-      navigate('/review', { state: { receiptIds } });
+      if (receiptIds.length === 0) {
+        toast({ title: 'No receipts processed', variant: 'destructive' });
+        return;
+      }
+
+      // Route based on confidence: skip review for high-confidence scans
+      if (needsReviewCount === 0) {
+        // All scans high confidence — auto-confirm and go to analysis
+        for (const id of receiptIds) {
+          await supabase
+            .from('receipts')
+            .update({ status: 'confirmed' })
+            .eq('id', id);
+        }
+        toast({ title: `${receiptIds.length === 1 ? 'Receipt' : `${receiptIds.length} receipts`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
+        navigate('/analysis', { state: { receiptIds } });
+      } else {
+        // Some scans need review
+        navigate('/review', { state: { receiptIds } });
+      }
     } catch (err: any) {
       console.error('Processing error:', err);
       toast({

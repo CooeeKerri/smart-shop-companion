@@ -29,6 +29,7 @@ const premiumFeatures = [
   { icon: ArrowLeftRight, label: 'Smart Substitutions' },
   { icon: Bot, label: 'Budget Mate AI Assistant' },
   { icon: ChefHat, label: 'Advanced Meal Suggestions' },
+  { icon: Tag, label: 'Specials Catalogue Access' },
 ];
 
 const Premium = () => {

@@ -182,6 +182,7 @@ const Scan = () => {
     setProcessing(true);
 
     const receiptIds: string[] = [];
+    let needsReviewCount = 0;
 
     try {
       setProcessingProgress({ current: 0, total: docketsWithImages.length });

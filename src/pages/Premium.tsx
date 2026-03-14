@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Crown, Check, Camera, PartyPopper, Calendar, Package, Calculator,
-  Zap, AlertTriangle, ArrowLeftRight, Bot, ChefHat, ArrowRight,
+  Zap, AlertTriangle, ArrowLeftRight, Bot, ChefHat, ArrowRight, Tag,
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from '@/hooks/use-toast';
@@ -29,6 +29,7 @@ const premiumFeatures = [
   { icon: ArrowLeftRight, label: 'Smart Substitutions' },
   { icon: Bot, label: 'Budget Mate AI Assistant' },
   { icon: ChefHat, label: 'Advanced Meal Suggestions' },
+  { icon: Tag, label: 'Specials Catalogue Access' },
 ];
 
 const Premium = () => {
@@ -117,6 +118,7 @@ const Premium = () => {
               { label: 'Make or Buy', path: '/make-or-buy', icon: Calculator },
               { label: 'Impulse Insights', path: '/impulse-insights', icon: Zap },
               { label: 'Price Comparison', path: '/price-comparison', icon: ArrowLeftRight },
+              { label: 'Specials & Catalogues', path: '/specials', icon: Tag },
               { label: 'Party Planner', path: '/occasion-chat', icon: PartyPopper },
               { label: 'Budget Mate', path: '/budget-chat', icon: Bot },
             ].map(({ label, path, icon: Icon }) => (

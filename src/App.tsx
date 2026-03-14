@@ -21,6 +21,7 @@ import Pantry from "./pages/Pantry";
 import MakeOrBuy from "./pages/MakeOrBuy";
 import ImpulseInsights from "./pages/ImpulseInsights";
 import PriceComparison from "./pages/PriceComparison";
+import Specials from "./pages/Specials";
 import Premium from "./pages/Premium";
 import NotFound from "./pages/NotFound";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/make-or-buy" element={<MakeOrBuy />} />
             <Route path="/impulse-insights" element={<ImpulseInsights />} />
             <Route path="/price-comparison" element={<PriceComparison />} />
+            <Route path="/specials" element={<Specials />} />
             <Route path="/premium" element={<Premium />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

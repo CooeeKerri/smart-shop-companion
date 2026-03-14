@@ -374,25 +374,60 @@ const ReceiptReview = () => {
           </Card>
         )}
 
-        {/* Overall confidence */}
+        {/* Confidence breakdown */}
         {dockets.some((d) => d.overallConfidence !== null) && (
-          <div className="flex items-center gap-2">
-            {dockets.map((d) => {
-              if (d.overallConfidence === null) return null;
-              const pct = Math.round(d.overallConfidence * 100);
-              const isGood = pct >= 80;
-              return (
-                <Badge
-                  key={d.id}
-                  variant="outline"
-                  className={`text-xs gap-1 ${isGood ? 'border-primary/40 text-primary' : 'border-warning/40 text-warning'}`}
-                >
-                  {isGood ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                  {pct}% scan confidence
-                </Badge>
-              );
-            })}
-          </div>
+          <Card>
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground">Scan Confidence</span>
+                {dockets.map((d) => {
+                  if (d.overallConfidence === null) return null;
+                  const pct = Math.round(d.overallConfidence * 100);
+                  const isGood = pct >= 75;
+                  return (
+                    <Badge
+                      key={d.id}
+                      variant="outline"
+                      className={`text-xs gap-1 ${isGood ? 'border-primary/40 text-primary' : 'border-warning/40 text-warning'}`}
+                    >
+                      {isGood ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                      {pct}% overall
+                    </Badge>
+                  );
+                })}
+              </div>
+              {dockets.map((d) => {
+                const cb = d.confidenceBreakdown;
+                if (!cb) return null;
+                const fields = [
+                  { label: 'Store', score: d.storeConfidence ?? 0 },
+                  { label: 'Date', score: cb.date_confidence },
+                  { label: 'Items', score: cb.item_extraction_confidence },
+                  { label: 'Total', score: cb.total_confidence },
+                ];
+                return (
+                  <div key={d.id} className="grid grid-cols-4 gap-2">
+                    {fields.map((f) => {
+                      const pct = Math.round(f.score * 100);
+                      const isLow = pct < 60;
+                      return (
+                        <div key={f.label} className={`text-center rounded-lg p-1.5 ${isLow ? 'bg-warning/10' : 'bg-muted/50'}`}>
+                          <p className={`text-lg font-bold ${isLow ? 'text-warning' : 'text-foreground'}`}>{pct}%</p>
+                          <p className="text-[10px] text-muted-foreground">{f.label}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+              {dockets.some((d) => d.confidenceBreakdown?.needs_review) && (
+                <p className="text-xs text-warning flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Some fields need your review before confirming.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Date */}

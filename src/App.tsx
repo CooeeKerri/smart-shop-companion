@@ -15,6 +15,7 @@ import Meals from "./pages/Meals";
 import ShopHistory from "./pages/ShopHistory";
 import Account from "./pages/Account";
 import BudgetChat from "./pages/BudgetChat";
+import OccasionChat from "./pages/OccasionChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

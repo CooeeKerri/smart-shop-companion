@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
@@ -8,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { useSubscription } from '@/hooks/useSubscription';
+import UpgradePrompt from '@/components/UpgradePrompt';
 
 interface Message {
   role: 'user' | 'assistant';

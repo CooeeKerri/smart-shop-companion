@@ -326,8 +326,209 @@ IMPORTANT: Double-check you haven't missed any items. Every line with a dollar a
   }
 }
 
+// ── Australian Store Database ──
+const KNOWN_STORES = [
+  {
+    canonical: "Coles",
+    patterns: ["coles", "coles supermarket", "coles express", "coles group", "coles online"],
+    abbreviations: ["cls", "col"],
+    abns: ["11004089936", "45004089936"],
+    itemPrefixes: ["CLS ", "COLES "],
+  },
+  {
+    canonical: "Woolworths",
+    patterns: ["woolworths", "woolworths group", "woolworths metro", "woolworths online", "woolies"],
+    abbreviations: ["ww", "wws", "wow"],
+    abns: ["88000014675", "63063297862"],
+    itemPrefixes: ["WW ", "WOOLWORTHS "],
+  },
+  {
+    canonical: "Aldi",
+    patterns: ["aldi", "aldi stores", "aldi australia"],
+    abbreviations: [],
+    abns: ["90070541833"],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "IGA",
+    patterns: ["iga", "iga supermarket", "iga xpress", "iga express", "supa iga"],
+    abbreviations: [],
+    abns: [], // varies by franchise
+    itemPrefixes: ["IGA "],
+  },
+  {
+    canonical: "Spudshed",
+    patterns: ["spudshed", "spud shed"],
+    abbreviations: [],
+    abns: ["16138344668"],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "Farmer Jacks",
+    patterns: ["farmer jack", "farmer jacks", "farmer jack's"],
+    abbreviations: ["fj"],
+    abns: [],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "Costco",
+    patterns: ["costco", "costco wholesale"],
+    abbreviations: [],
+    abns: ["84096175383"],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "Harris Farm",
+    patterns: ["harris farm", "harris farm markets"],
+    abbreviations: [],
+    abns: [],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "FoodWorks",
+    patterns: ["foodworks", "food works"],
+    abbreviations: [],
+    abns: [],
+    itemPrefixes: [],
+  },
+  {
+    canonical: "Drakes",
+    patterns: ["drakes", "drakes supermarket", "drake supermarket"],
+    abbreviations: [],
+    abns: [],
+    itemPrefixes: [],
+  },
+];
+
+interface StoreDetection {
+  store_name: string;
+  store_confidence: number;
+  store_review_required: boolean;
+  detected_abn: string | null;
+  detection_method: string;
+}
+
+// ── PASS 1.5: Store Detection ──
+function detectStore(parsed: any): StoreDetection {
+  const aiStoreName = (parsed.store_name || "").trim();
+  const aiStoreNameLower = aiStoreName.toLowerCase();
+
+  // Extract ABN if present in raw OCR or store name
+  const abnMatch = aiStoreName.match(/\b(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b/);
+  const detectedAbn = abnMatch ? abnMatch[1].replace(/\s/g, "") : null;
+
+  let bestMatch: typeof KNOWN_STORES[0] | null = null;
+  let bestScore = 0;
+  let method = "unknown";
+
+  // Method 1: ABN lookup (highest confidence)
+  if (detectedAbn) {
+    for (const store of KNOWN_STORES) {
+      if (store.abns.includes(detectedAbn)) {
+        bestMatch = store;
+        bestScore = 1.0;
+        method = "abn";
+        break;
+      }
+    }
+  }
+
+  // Method 2: Direct name match
+  if (!bestMatch || bestScore < 0.9) {
+    for (const store of KNOWN_STORES) {
+      for (const pattern of store.patterns) {
+        if (aiStoreNameLower.includes(pattern)) {
+          const score = pattern.length / Math.max(aiStoreNameLower.length, 1);
+          const matchScore = Math.max(0.7, Math.min(0.95, score + 0.3));
+          if (matchScore > bestScore) {
+            bestMatch = store;
+            bestScore = matchScore;
+            method = "name_match";
+          }
+        }
+      }
+    }
+  }
+
+  // Method 3: Abbreviation match in store name
+  if (!bestMatch || bestScore < 0.7) {
+    for (const store of KNOWN_STORES) {
+      for (const abbr of store.abbreviations) {
+        const abbrRegex = new RegExp(`\\b${abbr}\\b`, "i");
+        if (abbrRegex.test(aiStoreNameLower)) {
+          if (bestScore < 0.6) {
+            bestMatch = store;
+            bestScore = 0.6;
+            method = "abbreviation";
+          }
+        }
+      }
+    }
+  }
+
+  // Method 4: Item prefix analysis (look at item names for store-branded items)
+  if (!bestMatch || bestScore < 0.7) {
+    const items = parsed.items || [];
+    const prefixCounts: Record<string, number> = {};
+
+    for (const store of KNOWN_STORES) {
+      let count = 0;
+      for (const item of items) {
+        const rawUpper = (item.raw_name || "").toUpperCase();
+        for (const prefix of store.itemPrefixes) {
+          if (rawUpper.startsWith(prefix)) count++;
+        }
+      }
+      if (count > 0) prefixCounts[store.canonical] = count;
+    }
+
+    const topPrefix = Object.entries(prefixCounts).sort((a, b) => b[1] - a[1])[0];
+    if (topPrefix && topPrefix[1] >= 3) {
+      const store = KNOWN_STORES.find((s) => s.canonical === topPrefix[0]);
+      if (store) {
+        const prefixScore = Math.min(0.85, 0.5 + topPrefix[1] * 0.05);
+        if (prefixScore > bestScore) {
+          bestMatch = store;
+          bestScore = prefixScore;
+          method = "item_prefixes";
+        }
+      }
+    }
+  }
+
+  // Determine result
+  if (bestMatch && bestScore >= 0.7) {
+    return {
+      store_name: bestMatch.canonical,
+      store_confidence: Math.round(bestScore * 100) / 100,
+      store_review_required: bestScore < 0.85,
+      detected_abn: detectedAbn,
+      detection_method: method,
+    };
+  }
+
+  if (bestMatch && bestScore >= 0.4) {
+    return {
+      store_name: bestMatch.canonical,
+      store_confidence: Math.round(bestScore * 100) / 100,
+      store_review_required: true,
+      detected_abn: detectedAbn,
+      detection_method: method,
+    };
+  }
+
+  // No confident match — use AI's raw output but flag for review
+  return {
+    store_name: aiStoreName || "Unknown Store",
+    store_confidence: 0.3,
+    store_review_required: true,
+    detected_abn: detectedAbn,
+    detection_method: "ai_raw",
+  };
+}
+
 // ── PASS 2: Validation & Correction ──
-function validateReceipt(parsed: any) {
+function validateReceipt(parsed: any, storeDetection: StoreDetection) {
   const items = (parsed.items || []).map((item: any) => ({
     raw_name: item.raw_name || "",
     clean_name: item.clean_name || item.raw_name || "",
@@ -340,6 +541,13 @@ function validateReceipt(parsed: any) {
   }));
 
   const warnings: string[] = [];
+
+  // Store detection warning
+  if (storeDetection.store_review_required) {
+    warnings.push(
+      `Store detected as "${storeDetection.store_name}" (${Math.round(storeDetection.store_confidence * 100)}% confidence). Please confirm.`
+    );
+  }
 
   // Validation 1: Check calculated total vs stated total
   const calcTotal = items.reduce(
@@ -369,13 +577,11 @@ function validateReceipt(parsed: any) {
     }
   }
 
-  // Validation 3: Check for duplicate items (exact same name + price)
+  // Validation 3: Check for duplicate items
   const seen = new Set<string>();
   for (const item of items) {
     const key = `${item.clean_name.toLowerCase()}|${item.price}`;
     if (seen.has(key) && !item.is_discount) {
-      // Don't remove — could be legitimate (2 separate purchases of same item at different weights)
-      // But flag it
       item.confidence = Math.min(item.confidence, 0.6);
     }
     seen.add(key);
@@ -394,7 +600,6 @@ function validateReceipt(parsed: any) {
     ? confidences.reduce((a: number, b: number) => a + b, 0) / confidences.length
     : 0;
 
-  // Adjust overall confidence based on total match
   let overallConfidence = avgConfidence;
   if (statedTotal !== null) {
     const totalDiffPct = Math.abs(calcTotal - statedTotal) / Math.max(statedTotal, 1);
@@ -402,7 +607,6 @@ function validateReceipt(parsed: any) {
     else if (totalDiffPct > 0.1) overallConfidence = Math.max(overallConfidence - 0.2, 0.1);
   }
 
-  // Calculate subtotal and total discounts
   const nonDiscountTotal = items
     .filter((i: any) => !i.is_discount)
     .reduce((s: number, i: any) => s + i.price * i.quantity, 0);
@@ -411,7 +615,10 @@ function validateReceipt(parsed: any) {
     .reduce((s: number, i: any) => s + i.price * i.quantity, 0);
 
   return {
-    store_name: parsed.store_name || "Unknown",
+    store_name: storeDetection.store_name,
+    store_confidence: storeDetection.store_confidence,
+    store_review_required: storeDetection.store_review_required,
+    detected_abn: storeDetection.detected_abn,
     receipt_date: parsed.receipt_date || null,
     receipt_time: parsed.receipt_time || null,
     items,

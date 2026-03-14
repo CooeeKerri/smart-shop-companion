@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Crown, Check, Camera, PartyPopper, Calendar, Package, Calculator,
-  Zap, AlertTriangle, ArrowLeftRight, Bot, ChefHat, ArrowRight,
+  Zap, AlertTriangle, ArrowLeftRight, Bot, ChefHat, ArrowRight, Tag,
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from '@/hooks/use-toast';

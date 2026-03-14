@@ -1,13 +1,13 @@
-import { Home, Camera, UtensilsCrossed, History, User } from 'lucide-react';
+import { Home, Camera, UtensilsCrossed, History, Bot } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: Home, label: 'Home', path: '/dashboard' },
   { icon: Camera, label: 'Scan', path: '/scan' },
+  { icon: Bot, label: 'Budget', path: '/budget-chat' },
   { icon: UtensilsCrossed, label: 'Meals', path: '/meals' },
   { icon: History, label: 'History', path: '/history' },
-  { icon: User, label: 'Account', path: '/account' },
 ];
 
 const BottomNav = () => {

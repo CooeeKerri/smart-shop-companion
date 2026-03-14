@@ -21,6 +21,8 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/budget-chat`
 
 const BudgetChat = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { isPremium, loading: subLoading } = useSubscription();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',

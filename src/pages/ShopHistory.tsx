@@ -6,7 +6,8 @@ import AppLayout from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Store, Calendar, Receipt, DollarSign, ChevronDown, ChevronUp, TrendingDown, TrendingUp } from 'lucide-react';
+import { Store, Calendar, Receipt, DollarSign, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Trash2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface ReceiptWithItems {
   id: string;

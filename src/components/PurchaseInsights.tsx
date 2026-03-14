@@ -108,6 +108,9 @@ const PurchaseInsights = () => {
         if (date && !agg[key].dates.includes(date)) {
           agg[key].dates.push(date);
         }
+        if (date && item.price != null) {
+          agg[key].prices.push({ date, price: Number(item.price), isDiscount: !!item.is_discount });
+        }
       }
 
       const now = new Date();

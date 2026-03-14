@@ -16,6 +16,8 @@ const scores = [
 
 const Analysis = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const receiptIds: string[] = (location.state as any)?.receiptIds ?? [];
 
   return (
     <AppLayout>

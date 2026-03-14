@@ -96,6 +96,7 @@ const PurchaseInsights = () => {
             totalQty: 0,
             totalSpent: 0,
             dates: [],
+            prices: [],
           };
         }
 

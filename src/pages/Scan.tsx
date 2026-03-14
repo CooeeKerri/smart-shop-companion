@@ -356,8 +356,21 @@ const Scan = () => {
           </div>
         )}
 
+        {/* Preprocessing indicator */}
+        {preprocessingImage && (
+          <Card className="border-primary/30">
+            <CardContent className="flex items-center gap-3 p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <div>
+                <p className="text-sm font-medium">Optimising image…</p>
+                <p className="text-xs text-muted-foreground">Enhancing contrast, sharpening text, reducing shadows</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Add image options */}
-        {!processing && (
+        {!processing && !preprocessingImage && (
           <div className="space-y-3">
             {activeDocket.images.length > 0 && (
               <h2 className="font-display font-semibold text-sm text-muted-foreground">

@@ -55,8 +55,9 @@ const Scan = () => {
       .from('receipts')
       .select('id, store_name, created_at, status')
       .eq('user_id', user.id)
-      .in('status', ['pending', 'processing'])
+      .in('status', ['pending', 'processing', 'needs_review', 'reviewed'])
       .order('created_at', { ascending: false })
+      .limit(10)
       .then(({ data }) => {
         if (data) setPendingReceipts(data);
       });

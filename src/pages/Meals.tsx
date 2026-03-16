@@ -83,7 +83,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
       <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-[2px]">
         <div className="flex flex-col items-center gap-1.5 text-center px-4">
           <Lock className="h-5 w-5 text-muted-foreground" />
-          <p className="text-xs font-medium text-muted-foreground">Premium meal idea</p>
+          <p className="text-xs font-medium text-muted-foreground">Premium idea</p>
         </div>
       </div>
     )}

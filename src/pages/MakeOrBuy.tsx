@@ -46,8 +46,8 @@ const MakeOrBuy = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Make It or Buy It?</h1>
-        <p className="text-sm text-muted-foreground">Based on your recent purchases</p>
+        <h1 className="font-display text-2xl font-bold">Cook It or Grab Takeaway?</h1>
+        <p className="text-sm text-muted-foreground">Based on your recent shops</p>
       </div>
 
       <div className="px-4 space-y-3">

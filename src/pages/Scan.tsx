@@ -297,9 +297,9 @@ const Scan = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Just scan it</h1>
+        <h1 className="font-display text-2xl font-bold">Snap Your Docket</h1>
         <p className="text-sm text-muted-foreground">
-          Snap your receipt — no planning needed, we'll figure out the rest
+          Just snap it — no planning needed, we'll sort the rest
         </p>
         {!isPremium && !subLoading && (
           <div className="mt-2 flex items-center gap-2">

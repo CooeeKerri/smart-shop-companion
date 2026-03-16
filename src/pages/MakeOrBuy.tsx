@@ -30,13 +30,13 @@ const MakeOrBuy = () => {
     return (
       <AppLayout>
         <div className="px-4 pt-6 pb-4">
-          <h1 className="font-display text-2xl font-bold">Make It or Buy It?</h1>
-          <p className="text-sm text-muted-foreground">See when cooking from scratch actually saves you money</p>
+          <h1 className="font-display text-2xl font-bold">Cook It or Grab Takeaway?</h1>
+          <p className="text-sm text-muted-foreground">See when cooking from scratch actually saves you a few bucks</p>
         </div>
         <div className="px-4">
           <UpgradePrompt
-            feature="Make It or Buy It Calculator"
-            description="AI analyses your receipts and compares the cost of making items from scratch vs buying them ready-made, factoring in your time and ingredients on hand."
+            feature="Cook It or Grab Takeaway"
+            description="We'll suss out whether it's cheaper to whip it up yourself or just grab it off the shelf — factoring in your time and what you've already got."
           />
         </div>
       </AppLayout>
@@ -46,8 +46,8 @@ const MakeOrBuy = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Make It or Buy It?</h1>
-        <p className="text-sm text-muted-foreground">Based on your recent purchases</p>
+        <h1 className="font-display text-2xl font-bold">Cook It or Grab Takeaway?</h1>
+        <p className="text-sm text-muted-foreground">Based on your recent shops</p>
       </div>
 
       <div className="px-4 space-y-3">

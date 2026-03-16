@@ -313,7 +313,7 @@ const Analysis = () => {
           onClick={() => navigate('/meals')}
         >
           <Sparkles className="h-4 w-4" />
-          View meal suggestions
+          See what you can rustle up
           <ArrowRight className="h-4 w-4" />
         </Button>
 

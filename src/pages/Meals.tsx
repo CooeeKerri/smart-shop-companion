@@ -132,7 +132,7 @@ const Meals = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Meal ideas</h1>
+        <h1 className="font-display text-2xl font-bold">What You Can Rustle Up</h1>
         <p className="text-sm text-muted-foreground">Based on your latest shop</p>
       </div>
 

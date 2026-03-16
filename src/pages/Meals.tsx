@@ -111,7 +111,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
       </div>
       {meal.pantryStaples.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1">Pantry staples needed:</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">You'll need from the cupboard:</p>
           <p className="text-xs text-muted-foreground">{meal.pantryStaples.join(', ')}</p>
         </div>
       )}

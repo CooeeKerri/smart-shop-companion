@@ -188,7 +188,7 @@ const Analysis = () => {
       <AppLayout>
         <div className="px-4 pt-6 pb-4 text-center">
           <h1 className="font-display text-2xl font-bold">Shop analysis</h1>
-          <p className="text-sm text-muted-foreground mt-2">Scan a receipt to see your shop analysis</p>
+          <p className="text-sm text-muted-foreground mt-2">Scan a docket to see how your shop went</p>
           <Button className="mt-4" onClick={() => navigate('/scan')}>Scan a receipt</Button>
         </div>
       </AppLayout>

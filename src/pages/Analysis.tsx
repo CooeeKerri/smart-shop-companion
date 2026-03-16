@@ -250,7 +250,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <ArrowDown className="h-4 w-4 text-primary" /> Best value buys
+                    <ArrowDown className="h-4 w-4 text-primary" /> Best bargains
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">

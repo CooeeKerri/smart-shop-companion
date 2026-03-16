@@ -425,7 +425,7 @@ const Scan = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                     <Camera className="h-6 w-6 text-primary" />
                   </div>
-                  <p className="font-display text-sm font-semibold text-center">Take photo</p>
+                  <p className="font-display text-sm font-semibold text-center">Snap it</p>
                 </CardContent>
               </Card>
               <Card

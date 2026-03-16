@@ -93,7 +93,7 @@ const Scan = () => {
       if (!result.quality.ok) {
         toast({
           title: 'Photo quality issue',
-          description: result.quality.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+          description: result.quality.message || 'Please retake the docket photo with the full docket visible in good lighting.',
           variant: 'destructive',
           duration: 6000,
         });

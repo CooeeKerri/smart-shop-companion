@@ -28,7 +28,7 @@ const premiumFeatures = [
   { icon: AlertTriangle, label: 'Smart Waste Alerts' },
   { icon: ArrowLeftRight, label: 'Smart Substitutions' },
   { icon: Bot, label: 'Budget Mate AI Assistant' },
-  { icon: ChefHat, label: 'Advanced Meal Suggestions' },
+  { icon: ChefHat, label: 'More Meal Ideas to Rustle Up' },
   { icon: Tag, label: 'Specials Catalogue Access' },
 ];
 

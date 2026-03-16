@@ -83,7 +83,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
       <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-[2px]">
         <div className="flex flex-col items-center gap-1.5 text-center px-4">
           <Lock className="h-5 w-5 text-muted-foreground" />
-          <p className="text-xs font-medium text-muted-foreground">Premium meal idea</p>
+          <p className="text-xs font-medium text-muted-foreground">Premium idea</p>
         </div>
       </div>
     )}
@@ -102,7 +102,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
     </CardHeader>
     <CardContent className="space-y-3">
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-1">From your shop:</p>
+        <p className="text-xs font-medium text-muted-foreground mb-1">From your trolley:</p>
         <div className="flex flex-wrap gap-1">
           {meal.ingredients.map((i) => (
             <Badge key={i} variant="secondary" className="text-xs">{i}</Badge>
@@ -111,7 +111,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
       </div>
       {meal.pantryStaples.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-1">Pantry staples needed:</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">You'll need from the cupboard:</p>
           <p className="text-xs text-muted-foreground">{meal.pantryStaples.join(', ')}</p>
         </div>
       )}
@@ -132,7 +132,7 @@ const Meals = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Meal ideas</h1>
+        <h1 className="font-display text-2xl font-bold">What You Can Rustle Up</h1>
         <p className="text-sm text-muted-foreground">Based on your latest shop</p>
       </div>
 
@@ -166,7 +166,7 @@ const Meals = () => {
                         </div>
                         <div>
                           <h3 className="font-display font-bold text-sm">
-                            Unlock {premiumMeals.filter((m) => cat === 'all' || m.category === cat).length} more meal ideas
+                            Unlock {premiumMeals.filter((m) => cat === 'all' || m.category === cat).length} more ideas
                           </h3>
                           <p className="text-xs text-muted-foreground mt-1">
                             Get personalised meals for every item you buy — breakfast, lunch, dinner & snacks

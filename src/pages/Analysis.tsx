@@ -289,7 +289,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-destructive" /> Healthier swaps
+                    <Heart className="h-4 w-4 text-destructive" /> Healthier options next time
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

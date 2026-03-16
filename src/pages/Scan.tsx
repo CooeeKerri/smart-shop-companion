@@ -93,7 +93,7 @@ const Scan = () => {
       if (!result.quality.ok) {
         toast({
           title: 'Photo quality issue',
-          description: result.quality.message || 'Please retake the receipt photo with the full receipt visible in good lighting.',
+          description: result.quality.message || 'Please retake the docket photo with the full docket visible in good lighting.',
           variant: 'destructive',
           duration: 6000,
         });
@@ -259,7 +259,7 @@ const Scan = () => {
       }
 
       if (receiptIds.length === 0) {
-        toast({ title: 'No receipts processed', variant: 'destructive' });
+        toast({ title: 'No dockets processed', variant: 'destructive' });
         return;
       }
 
@@ -272,7 +272,7 @@ const Scan = () => {
             .update({ status: 'confirmed' })
             .eq('id', id);
         }
-        toast({ title: `${receiptIds.length === 1 ? 'Receipt' : `${receiptIds.length} receipts`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
+        toast({ title: `${receiptIds.length === 1 ? 'Docket' : `${receiptIds.length} dockets`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
         navigate('/analysis', { state: { receiptIds } });
       } else {
         // Some scans need review
@@ -297,9 +297,9 @@ const Scan = () => {
   return (
     <AppLayout>
       <div className="px-4 pt-6 pb-4">
-        <h1 className="font-display text-2xl font-bold">Just scan it</h1>
+        <h1 className="font-display text-2xl font-bold">Snap Your Docket</h1>
         <p className="text-sm text-muted-foreground">
-          Snap your receipt — no planning needed, we'll figure out the rest
+          Just snap it — no planning needed, we'll sort the rest
         </p>
         {!isPremium && !subLoading && (
           <div className="mt-2 flex items-center gap-2">
@@ -413,7 +413,7 @@ const Scan = () => {
           <div className="space-y-3">
             {activeDocket.images.length > 0 && (
               <h2 className="font-display font-semibold text-sm text-muted-foreground">
-                Add more sections of this receipt
+                Add more sections of this docket
               </h2>
             )}
             <div className="grid grid-cols-2 gap-3">
@@ -425,7 +425,7 @@ const Scan = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                     <Camera className="h-6 w-6 text-primary" />
                   </div>
-                  <p className="font-display text-sm font-semibold text-center">Take photo</p>
+                  <p className="font-display text-sm font-semibold text-center">Snap it</p>
                 </CardContent>
               </Card>
               <Card
@@ -436,7 +436,7 @@ const Scan = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10">
                     <Upload className="h-6 w-6 text-secondary" />
                   </div>
-                  <p className="font-display text-sm font-semibold text-center">Upload file</p>
+                  <p className="font-display text-sm font-semibold text-center">Upload docket</p>
                 </CardContent>
               </Card>
             </div>
@@ -484,12 +484,12 @@ const Scan = () => {
         {/* Tips */}
         {totalImages === 0 && !processing && (
           <div className="rounded-xl bg-muted p-4 space-y-2">
-            <p className="text-sm font-medium">📸 Tips:</p>
+            <p className="text-sm font-medium">📸 Quick tips:</p>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Long receipt? Add multiple photos per docket — we'll merge them</li>
-              <li>• Multiple stores? Use "Add docket" to queue separate receipts</li>
-              <li>• Include the store header and total at the bottom</li>
-              <li>• Lay the receipt flat and avoid shadows</li>
+              <li>• Long docket? Add multiple photos — we'll stitch them together</li>
+              <li>• Multiple shops? Use "Add docket" to queue them up</li>
+              <li>• Make sure the store name and total are in the shot</li>
+              <li>• Lay the docket flat and avoid shadows</li>
             </ul>
           </div>
         )}

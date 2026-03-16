@@ -259,7 +259,7 @@ const Scan = () => {
       }
 
       if (receiptIds.length === 0) {
-        toast({ title: 'No receipts processed', variant: 'destructive' });
+        toast({ title: 'No dockets processed', variant: 'destructive' });
         return;
       }
 

@@ -68,10 +68,10 @@ const EatSoonAlert = () => {
       <CardHeader className="pb-2">
         <CardTitle className="font-display text-base flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-orange-500" />
-          <span>Eat soon</span>
+          <span>Use These Up First</span>
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          These won't last — use them first to waste less
+          Don't let these go off — they won't last long
         </p>
       </CardHeader>
       <CardContent className="pt-0">

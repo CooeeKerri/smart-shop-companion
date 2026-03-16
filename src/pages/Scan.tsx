@@ -272,7 +272,7 @@ const Scan = () => {
             .update({ status: 'confirmed' })
             .eq('id', id);
         }
-        toast({ title: `${receiptIds.length === 1 ? 'Receipt' : `${receiptIds.length} receipts`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
+        toast({ title: `${receiptIds.length === 1 ? 'Docket' : `${receiptIds.length} dockets`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
         navigate('/analysis', { state: { receiptIds } });
       } else {
         // Some scans need review

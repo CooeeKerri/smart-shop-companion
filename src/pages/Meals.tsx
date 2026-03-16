@@ -102,7 +102,7 @@ const MealCard = ({ meal, locked }: { meal: MealSuggestion; locked: boolean }) =
     </CardHeader>
     <CardContent className="space-y-3">
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-1">From your shop:</p>
+        <p className="text-xs font-medium text-muted-foreground mb-1">From your trolley:</p>
         <div className="flex flex-wrap gap-1">
           {meal.ingredients.map((i) => (
             <Badge key={i} variant="secondary" className="text-xs">{i}</Badge>

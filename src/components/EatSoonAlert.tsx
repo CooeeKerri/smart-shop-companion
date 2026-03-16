@@ -87,7 +87,7 @@ const EatSoonAlert = () => {
           ))}
         </div>
         <p className="text-xs text-muted-foreground italic">
-          💡 Cook meals with these first — reduces waste and saves money
+          💡 Rustle up something with these first — less waste, more value
         </p>
       </CardContent>
     </Card>

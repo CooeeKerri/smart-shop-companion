@@ -484,12 +484,12 @@ const Scan = () => {
         {/* Tips */}
         {totalImages === 0 && !processing && (
           <div className="rounded-xl bg-muted p-4 space-y-2">
-            <p className="text-sm font-medium">📸 Tips:</p>
+            <p className="text-sm font-medium">📸 Quick tips:</p>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Long receipt? Add multiple photos per docket — we'll merge them</li>
-              <li>• Multiple stores? Use "Add docket" to queue separate receipts</li>
-              <li>• Include the store header and total at the bottom</li>
-              <li>• Lay the receipt flat and avoid shadows</li>
+              <li>• Long docket? Add multiple photos — we'll stitch them together</li>
+              <li>• Multiple shops? Use "Add docket" to queue them up</li>
+              <li>• Make sure the store name and total are in the shot</li>
+              <li>• Lay the docket flat and avoid shadows</li>
             </ul>
           </div>
         )}

@@ -166,7 +166,7 @@ const Meals = () => {
                         </div>
                         <div>
                           <h3 className="font-display font-bold text-sm">
-                            Unlock {premiumMeals.filter((m) => cat === 'all' || m.category === cat).length} more meal ideas
+                            Unlock {premiumMeals.filter((m) => cat === 'all' || m.category === cat).length} more ideas
                           </h3>
                           <p className="text-xs text-muted-foreground mt-1">
                             Get personalised meals for every item you buy — breakfast, lunch, dinner & snacks

@@ -269,7 +269,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <ArrowUp className="h-4 w-4 text-secondary" /> Cheaper swaps for next time
+                    <ArrowUp className="h-4 w-4 text-secondary" /> Could've saved a few bucks
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

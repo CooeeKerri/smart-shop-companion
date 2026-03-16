@@ -200,7 +200,7 @@ const Analysis = () => {
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">Shop analysis</h1>
+            <h1 className="font-display text-2xl font-bold">How'd Your Shop Go?</h1>
             <p className="text-sm text-muted-foreground">
               {shortStoreName(receipt.store_name)} · {formatDate(receipt.shop_date)} · ${receipt.total_amount?.toFixed(2) ?? '—'}
             </p>

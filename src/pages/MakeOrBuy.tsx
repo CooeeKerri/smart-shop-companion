@@ -35,8 +35,8 @@ const MakeOrBuy = () => {
         </div>
         <div className="px-4">
           <UpgradePrompt
-            feature="Make It or Buy It Calculator"
-            description="AI analyses your receipts and compares the cost of making items from scratch vs buying them ready-made, factoring in your time and ingredients on hand."
+            feature="Cook It or Grab Takeaway"
+            description="We'll suss out whether it's cheaper to whip it up yourself or just grab it off the shelf — factoring in your time and what you've already got."
           />
         </div>
       </AppLayout>

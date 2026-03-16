@@ -30,8 +30,8 @@ const MakeOrBuy = () => {
     return (
       <AppLayout>
         <div className="px-4 pt-6 pb-4">
-          <h1 className="font-display text-2xl font-bold">Make It or Buy It?</h1>
-          <p className="text-sm text-muted-foreground">See when cooking from scratch actually saves you money</p>
+          <h1 className="font-display text-2xl font-bold">Cook It or Grab Takeaway?</h1>
+          <p className="text-sm text-muted-foreground">See when cooking from scratch actually saves you a few bucks</p>
         </div>
         <div className="px-4">
           <UpgradePrompt

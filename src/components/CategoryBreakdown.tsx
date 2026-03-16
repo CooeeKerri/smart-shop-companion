@@ -106,7 +106,7 @@ const CategoryBreakdown = () => {
         <CardTitle className="flex items-center justify-between font-display text-base">
           <div className="flex items-center gap-2">
             <PieChart className="h-4 w-4 text-primary" />
-            {currentMonth} by category
+            {currentMonth} — Your Shop Breakdown
           </div>
           <span className="text-sm font-semibold text-primary">
             ${monthTotal.toFixed(2)}

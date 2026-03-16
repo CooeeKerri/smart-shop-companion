@@ -187,8 +187,8 @@ const Analysis = () => {
     return (
       <AppLayout>
         <div className="px-4 pt-6 pb-4 text-center">
-          <h1 className="font-display text-2xl font-bold">Shop analysis</h1>
-          <p className="text-sm text-muted-foreground mt-2">Scan a receipt to see your shop analysis</p>
+            <h1 className="font-display text-2xl font-bold">Your Trolley Report</h1>
+          <p className="text-sm text-muted-foreground mt-2">Scan a docket to see how your shop went</p>
           <Button className="mt-4" onClick={() => navigate('/scan')}>Scan a receipt</Button>
         </div>
       </AppLayout>
@@ -200,7 +200,7 @@ const Analysis = () => {
       <div className="px-4 pt-6 pb-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">Shop analysis</h1>
+            <h1 className="font-display text-2xl font-bold">How'd Your Shop Go?</h1>
             <p className="text-sm text-muted-foreground">
               {shortStoreName(receipt.store_name)} · {formatDate(receipt.shop_date)} · ${receipt.total_amount?.toFixed(2) ?? '—'}
             </p>
@@ -250,7 +250,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <ArrowDown className="h-4 w-4 text-primary" /> Best value buys
+                    <ArrowDown className="h-4 w-4 text-primary" /> Best bargains
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -269,7 +269,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <ArrowUp className="h-4 w-4 text-secondary" /> Cheaper swaps for next time
+                    <ArrowUp className="h-4 w-4 text-secondary" /> Could've saved a few bucks
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -289,7 +289,7 @@ const Analysis = () => {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="font-display text-base flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-destructive" /> Healthier swaps
+                    <Heart className="h-4 w-4 text-destructive" /> Healthier options next time
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

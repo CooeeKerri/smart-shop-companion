@@ -436,7 +436,7 @@ const Scan = () => {
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10">
                     <Upload className="h-6 w-6 text-secondary" />
                   </div>
-                  <p className="font-display text-sm font-semibold text-center">Upload file</p>
+                  <p className="font-display text-sm font-semibold text-center">Upload docket</p>
                 </CardContent>
               </Card>
             </div>

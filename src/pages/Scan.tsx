@@ -413,7 +413,7 @@ const Scan = () => {
           <div className="space-y-3">
             {activeDocket.images.length > 0 && (
               <h2 className="font-display font-semibold text-sm text-muted-foreground">
-                Add more sections of this receipt
+                Add more sections of this docket
               </h2>
             )}
             <div className="grid grid-cols-2 gap-3">

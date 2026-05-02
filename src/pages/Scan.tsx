@@ -201,7 +201,7 @@ const Scan = () => {
         const imagePaths: string[] = [];
         for (let i = 0; i < docket.images.length; i++) {
           const img = docket.images[i];
-          const ext = img.file.name.split('.').pop() || 'jpg';
+          const ext = img.file.type === 'image/jpeg' ? 'jpg' : (img.file.name.split('.').pop() || 'jpg');
           const storagePath = `${user.id}/${receipt.id}_${i + 1}.${ext}`;
 
           const { error: uploadError } = await supabase.storage

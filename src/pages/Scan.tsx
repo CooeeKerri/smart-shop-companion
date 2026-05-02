@@ -37,6 +37,7 @@ interface ScanLimitResult {
 }
 
 interface ProcessReceiptResult {
+  error?: string;
   rejected?: boolean;
   message?: string;
   needs_review?: boolean;
@@ -251,6 +252,11 @@ const Scan = () => {
 
         if (ocrError) {
           console.error(`OCR error for docket ${dIdx + 1}:`, ocrError);
+          throw new Error(ocrError.message || `Could not read docket ${dIdx + 1}`);
+        }
+
+        if (ocrData?.error) {
+          throw new Error(ocrData.error);
         }
 
         // Check if server rejected image quality

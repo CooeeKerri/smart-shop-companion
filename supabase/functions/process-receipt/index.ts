@@ -64,23 +64,33 @@ Deno.serve(async (req) => {
     // Quality gate removed — we trust Gemini to read most photos and only
     // surface a problem if extraction itself fails or returns nothing usable.
 
-    // ── PASS 1: Extract with store-specific template ──
-    // First do a quick store detection from the images, then use a tailored prompt
+    // ── PASS 1: Extract directly from the optimised docket photo(s) ──
     const extractionResult = await runExtraction(imageContents, LOVABLE_API_KEY);
-    if (!extractionResult.ok) {
+    let validated: any = null;
+
+    if (extractionResult.ok) {
+      const parsed = extractionResult.data!;
+      validated = { ...validateReceipt(parsed, detectStore(parsed)), extraction_method: "vision_direct" };
+    } else if (extractionResult.status === 429 || extractionResult.status === 402) {
       return new Response(
         JSON.stringify({ error: extractionResult.error }),
         { status: extractionResult.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const parsed = extractionResult.data!;
-
-    // ── PASS 1.5: Store detection & validation ──
-    const storeDetection = detectStore(parsed);
-
-    // ── PASS 2: Validation with store-specific rules ──
-    const validated = validateReceipt(parsed, storeDetection);
+    // ── PASS 2: If the direct read looks weak, transcribe text first then parse that text ──
+    if (!validated || shouldRunFallback(validated)) {
+      const fallback = await runOcrTextFallback(imageContents, LOVABLE_API_KEY);
+      if (fallback.ok) {
+        const fallbackValidated = { ...validateReceipt(fallback.data!, detectStore(fallback.data!)), extraction_method: "ocr_text_fallback" };
+        validated = chooseBestExtraction(validated, fallbackValidated);
+      } else if (!validated) {
+        return new Response(
+          JSON.stringify({ error: fallback.error || extractionResult.error || "Could not read the docket" }),
+          { status: fallback.status || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Save to database
     await saveReceipt(supabase, receipt_id, validated);
@@ -104,6 +114,7 @@ Deno.serve(async (req) => {
         total_confidence: validated.total_confidence,
         item_extraction_confidence: validated.item_extraction_confidence,
         needs_review: validated.needs_review,
+        extraction_method: validated.extraction_method,
         warnings: validated.warnings,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -443,6 +454,122 @@ FINAL CHECK: Review your output. Every item must be a real product. No totals, n
   } catch {
     console.error("Failed to parse AI response:", content);
     return { ok: false, status: 500, error: "Failed to parse receipt data" } as const;
+  }
+}
+
+async function runOcrTextFallback(
+  images: { base64: string; mimeType: string }[],
+  apiKey: string
+) {
+  const textResult = await transcribeDocketText(images, apiKey);
+  if (!textResult.ok) return textResult;
+  const transcribedText = textResult.text.trim();
+
+  if (transcribedText.replace(/\s+/g, " ").length < 40) {
+    return { ok: false, status: 422, error: "The docket text could not be read clearly enough." } as const;
+  }
+
+  return parseTranscribedDocketText(transcribedText, apiKey);
+}
+
+async function transcribeDocketText(
+  images: { base64: string; mimeType: string }[],
+  apiKey: string
+) {
+  const messageContent: any[] = images.map((img) => ({
+    type: "image_url",
+    image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
+  }));
+
+  messageContent.push({
+    type: "text",
+    text: `Read this Australian grocery docket as accurately as possible.
+
+Return plain text only. Preserve the original line order, product abbreviations, prices, totals, date/time, ABN, and store header. If the docket is split across multiple photos, combine the sections in top-to-bottom order and avoid duplicating overlapping lines.`,
+  });
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-pro",
+      messages: [{ role: "user", content: messageContent }],
+      temperature: 0,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("OCR fallback transcription error:", response.status, errText);
+    if (response.status === 429) return { ok: false, status: 429, error: "Rate limit exceeded. Please try again shortly." } as const;
+    if (response.status === 402) return { ok: false, status: 402, error: "AI credits exhausted." } as const;
+    return { ok: false, status: 500, error: "Fallback docket reading failed" } as const;
+  }
+
+  const result = await response.json();
+  return { ok: true, text: result.choices?.[0]?.message?.content ?? "" } as const;
+}
+
+async function parseTranscribedDocketText(text: string, apiKey: string) {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: `Parse this OCR text from an Australian grocery docket into the exact JSON shape below. Use the same rules as a receipt scanner: extract only purchased products, ignore payment/GST/loyalty/total lines as items, decode Aussie grocery abbreviations, keep discounts as separate negative line items, and use AUD prices.
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "store_name": "Full store name from docket header",
+  "receipt_date": "YYYY-MM-DD or null",
+  "receipt_time": "HH:MM or null",
+  "items": [{
+    "raw_name": "original line name",
+    "clean_name": "human readable name",
+    "ingredient_keyword": "core food keyword or null",
+    "category": "Fresh Produce | Meat & Seafood | Dairy | Bakery | Pantry | Frozen | Drinks | Snacks | Household | Health & Beauty | Pet | Baby | Deli | Other",
+    "price": 1.23,
+    "quantity": 1,
+    "is_discount": false,
+    "is_food": true,
+    "confidence": 0.8
+  }],
+  "subtotal": 0,
+  "total_discounts": 0,
+  "total": 0
+}
+
+OCR TEXT:
+${text}`,
+      }],
+      temperature: 0.05,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("OCR fallback parse error:", response.status, errText);
+    if (response.status === 429) return { ok: false, status: 429, error: "Rate limit exceeded. Please try again shortly." } as const;
+    if (response.status === 402) return { ok: false, status: 402, error: "AI credits exhausted." } as const;
+    return { ok: false, status: 500, error: "Fallback docket parsing failed" } as const;
+  }
+
+  const result = await response.json();
+  const content = result.choices?.[0]?.message?.content ?? "";
+  try {
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    return { ok: true, data: JSON.parse(cleaned) } as const;
+  } catch {
+    console.error("Failed to parse fallback response:", content);
+    return { ok: false, status: 500, error: "Fallback returned unreadable docket data" } as const;
   }
 }
 
@@ -788,6 +915,23 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
   };
 }
 
+function shouldRunFallback(data: any): boolean {
+  return !data ||
+    data.items.length < 3 ||
+    data.item_extraction_confidence < 0.7 ||
+    data.total_confidence < 0.6 ||
+    data.store_name === "Unknown Store";
+}
+
+function chooseBestExtraction(primary: any | null, fallback: any) {
+  if (!primary) return fallback;
+
+  const primaryScore = primary.items.length * 0.08 + primary.overall_confidence + primary.total_confidence * 0.4;
+  const fallbackScore = fallback.items.length * 0.08 + fallback.overall_confidence + fallback.total_confidence * 0.4;
+
+  return fallbackScore > primaryScore + 0.15 ? fallback : primary;
+}
+
 // ── Save to database ──
 async function saveReceipt(supabase: any, receiptId: string, data: any) {
   // Update receipt metadata
@@ -805,6 +949,7 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
       receipt_time: data.receipt_time,
       raw_ocr_text: JSON.stringify({
         warnings: data.warnings,
+        extraction_method: data.extraction_method,
         date_confidence: data.date_confidence,
         total_confidence: data.total_confidence,
         item_extraction_confidence: data.item_extraction_confidence,

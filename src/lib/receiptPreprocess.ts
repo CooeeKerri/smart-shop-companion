@@ -238,8 +238,8 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      // Scale down very large images to max 2400px on longest side (keeps detail for OCR)
-      const maxDim = 2400;
+      // Scale down very large images while preserving enough receipt text detail for OCR.
+      const maxDim = 3200;
       let { width, height } = img;
       if (width > maxDim || height > maxDim) {
         const scale = maxDim / Math.max(width, height);
@@ -285,13 +285,13 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       toGrayscale(grayData.data);
       ctx.putImageData(grayData, 0, 0);
 
-      // Step 4: Enhance contrast
+      // Step 4: Enhance contrast without crushing faint thermal-paper text
       const contrastData = ctx.getImageData(0, 0, width, height);
-      enhanceContrast(contrastData.data, 1.5);
+      enhanceContrast(contrastData.data, 1.25);
       ctx.putImageData(contrastData, 0, 0);
 
       // Step 5: Sharpen text
-      sharpen(ctx, width, height, 0.7);
+      sharpen(ctx, width, height, 0.45);
 
       // Convert processed canvas to file
       canvas.toBlob(

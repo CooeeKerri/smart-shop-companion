@@ -64,23 +64,35 @@ Deno.serve(async (req) => {
     // Quality gate removed — we trust Gemini to read most photos and only
     // surface a problem if extraction itself fails or returns nothing usable.
 
-    // ── PASS 1: Extract with store-specific template ──
-    // First do a quick store detection from the images, then use a tailored prompt
+    // ── PASS 1: Extract directly from the optimised docket photo(s) ──
     const extractionResult = await runExtraction(imageContents, LOVABLE_API_KEY);
-    if (!extractionResult.ok) {
+    let validated: any = null;
+
+    if (extractionResult.ok) {
+      const parsed = extractionResult.data!;
+      validated = validateReceipt(parsed, detectStore(parsed));
+      validated.extraction_method = "vision_direct";
+    } else if (extractionResult.status === 429 || extractionResult.status === 402) {
       return new Response(
         JSON.stringify({ error: extractionResult.error }),
         { status: extractionResult.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const parsed = extractionResult.data!;
-
-    // ── PASS 1.5: Store detection & validation ──
-    const storeDetection = detectStore(parsed);
-
-    // ── PASS 2: Validation with store-specific rules ──
-    const validated = validateReceipt(parsed, storeDetection);
+    // ── PASS 2: If the direct read looks weak, transcribe text first then parse that text ──
+    if (!validated || shouldRunFallback(validated)) {
+      const fallback = await runOcrTextFallback(imageContents, LOVABLE_API_KEY);
+      if (fallback.ok) {
+        const fallbackValidated = validateReceipt(fallback.data!, detectStore(fallback.data!));
+        fallbackValidated.extraction_method = "ocr_text_fallback";
+        validated = chooseBestExtraction(validated, fallbackValidated);
+      } else if (!validated) {
+        return new Response(
+          JSON.stringify({ error: fallback.error || extractionResult.error || "Could not read the docket" }),
+          { status: fallback.status || 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Save to database
     await saveReceipt(supabase, receipt_id, validated);
@@ -104,6 +116,7 @@ Deno.serve(async (req) => {
         total_confidence: validated.total_confidence,
         item_extraction_confidence: validated.item_extraction_confidence,
         needs_review: validated.needs_review,
+        extraction_method: validated.extraction_method,
         warnings: validated.warnings,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

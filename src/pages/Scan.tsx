@@ -90,17 +90,9 @@ const Scan = () => {
     try {
       const result = await preprocessReceiptImage(file);
 
-      if (!result.quality.ok) {
-        toast({
-          title: 'Photo quality issue',
-          description: result.quality.message || 'Please retake the docket photo with the full docket visible in good lighting.',
-          variant: 'destructive',
-          duration: 6000,
-        });
-        setPreprocessingImage(false);
-        return;
-      }
-
+      // Note: we no longer block on quality scores. Gemini can read most images
+      // even when our heuristics flag them. We pass everything through and let
+      // the AI tell us if it genuinely can't read the docket.
       setDockets((prev) =>
         prev.map((d, i) =>
           i === activeDocketIdx

@@ -130,6 +130,87 @@ export type Database = {
           },
         ]
       }
+      pantry_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          estimated_expiry_date: string | null
+          id: string
+          ingredient_keyword: string | null
+          name: string
+          quantity: number
+          source_receipt_item_id: string | null
+          status: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          estimated_expiry_date?: string | null
+          id?: string
+          ingredient_keyword?: string | null
+          name: string
+          quantity?: number
+          source_receipt_item_id?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          estimated_expiry_date?: string | null
+          id?: string
+          ingredient_keyword?: string | null
+          name?: string
+          quantity?: number
+          source_receipt_item_id?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      product_aliases: {
+        Row: {
+          category: string | null
+          cleaned_name: string
+          created_at: string
+          id: string
+          ingredient_keyword: string | null
+          raw_text: string
+          store_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          cleaned_name: string
+          created_at?: string
+          id?: string
+          ingredient_keyword?: string | null
+          raw_text: string
+          store_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          cleaned_name?: string
+          created_at?: string
+          id?: string
+          ingredient_keyword?: string | null
+          raw_text?: string
+          store_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -171,6 +252,7 @@ export type Database = {
           quantity: number
           raw_name: string | null
           receipt_id: string
+          unit: string | null
         }
         Insert: {
           category?: string | null
@@ -185,6 +267,7 @@ export type Database = {
           quantity?: number
           raw_name?: string | null
           receipt_id: string
+          unit?: string | null
         }
         Update: {
           category?: string | null
@@ -199,6 +282,7 @@ export type Database = {
           quantity?: number
           raw_name?: string | null
           receipt_id?: string
+          unit?: string | null
         }
         Relationships: [
           {
@@ -214,12 +298,16 @@ export type Database = {
         Row: {
           created_at: string
           detected_abn: string | null
+          extraction_method: string | null
           health_score: number | null
           id: string
           image_paths: string[] | null
           image_url: string | null
           meal_potential_score: number | null
+          original_image_paths: string[] | null
+          original_image_url: string | null
           overall_confidence: number | null
+          raw_extraction_json: Json | null
           raw_ocr_text: string | null
           receipt_time: string | null
           shop_date: string | null
@@ -238,12 +326,16 @@ export type Database = {
         Insert: {
           created_at?: string
           detected_abn?: string | null
+          extraction_method?: string | null
           health_score?: number | null
           id?: string
           image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
+          original_image_paths?: string[] | null
+          original_image_url?: string | null
           overall_confidence?: number | null
+          raw_extraction_json?: Json | null
           raw_ocr_text?: string | null
           receipt_time?: string | null
           shop_date?: string | null
@@ -262,12 +354,16 @@ export type Database = {
         Update: {
           created_at?: string
           detected_abn?: string | null
+          extraction_method?: string | null
           health_score?: number | null
           id?: string
           image_paths?: string[] | null
           image_url?: string | null
           meal_potential_score?: number | null
+          original_image_paths?: string[] | null
+          original_image_url?: string | null
           overall_confidence?: number | null
+          raw_extraction_json?: Json | null
           raw_ocr_text?: string | null
           receipt_time?: string | null
           shop_date?: string | null
@@ -325,6 +421,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scan_errors: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          error_type: string
+          id: string
+          raw_response: string | null
+          receipt_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          error_type: string
+          id?: string
+          raw_response?: string | null
+          receipt_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          error_type?: string
+          id?: string
+          raw_response?: string | null
+          receipt_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_subscriptions: {
         Row: {

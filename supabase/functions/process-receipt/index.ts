@@ -515,6 +515,66 @@ Return plain text only. Preserve the original line order, product abbreviations,
   return { ok: true, text: result.choices?.[0]?.message?.content ?? "" } as const;
 }
 
+async function parseTranscribedDocketText(text: string, apiKey: string) {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{
+        role: "user",
+        content: `Parse this OCR text from an Australian grocery docket into the exact JSON shape below. Use the same rules as a receipt scanner: extract only purchased products, ignore payment/GST/loyalty/total lines as items, decode Aussie grocery abbreviations, keep discounts as separate negative line items, and use AUD prices.
+
+Return ONLY valid JSON, no markdown fences:
+{
+  "store_name": "Full store name from docket header",
+  "receipt_date": "YYYY-MM-DD or null",
+  "receipt_time": "HH:MM or null",
+  "items": [{
+    "raw_name": "original line name",
+    "clean_name": "human readable name",
+    "ingredient_keyword": "core food keyword or null",
+    "category": "Fresh Produce | Meat & Seafood | Dairy | Bakery | Pantry | Frozen | Drinks | Snacks | Household | Health & Beauty | Pet | Baby | Deli | Other",
+    "price": 1.23,
+    "quantity": 1,
+    "is_discount": false,
+    "is_food": true,
+    "confidence": 0.8
+  }],
+  "subtotal": 0,
+  "total_discounts": 0,
+  "total": 0
+}
+
+OCR TEXT:
+${text}`,
+      }],
+      temperature: 0.05,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("OCR fallback parse error:", response.status, errText);
+    if (response.status === 429) return { ok: false, status: 429, error: "Rate limit exceeded. Please try again shortly." } as const;
+    if (response.status === 402) return { ok: false, status: 402, error: "AI credits exhausted." } as const;
+    return { ok: false, status: 500, error: "Fallback docket parsing failed" } as const;
+  }
+
+  const result = await response.json();
+  const content = result.choices?.[0]?.message?.content ?? "";
+  try {
+    const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    return { ok: true, data: JSON.parse(cleaned) } as const;
+  } catch {
+    console.error("Failed to parse fallback response:", content);
+    return { ok: false, status: 500, error: "Fallback returned unreadable docket data" } as const;
+  }
+}
+
 // ── Australian Store Database ──
 const KNOWN_STORES = [
   {

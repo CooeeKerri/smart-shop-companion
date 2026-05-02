@@ -407,6 +407,7 @@ Return ONLY valid JSON (no markdown fences):
       "category": "Meat & Seafood",
       "price": 7.50,
       "quantity": 1,
+      "unit": "ea",
       "is_discount": false,
       "is_food": true,
       "confidence": 0.9
@@ -416,6 +417,10 @@ Return ONLY valid JSON (no markdown fences):
   "total_discounts": -3.20,
   "total": 39.30
 }
+
+UNIT RULES:
+- For weighted items (meat, deli, produce sold by weight) use "kg" and put the weight as quantity (e.g. 0.456kg of bananas → quantity: 0.456, unit: "kg").
+- For everything else use "ea" with integer quantity.
 
 INGREDIENT_KEYWORD RULES:
 - Extract the core grocery ingredient, lowercase, no brand, no size, no packaging.
@@ -794,7 +799,8 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
     ingredient_keyword: item.ingredient_keyword || null,
     category: item.category || "Other",
     price: typeof item.price === "number" ? item.price : parseFloat(item.price) || 0,
-    quantity: item.quantity || 1,
+    quantity: typeof item.quantity === "number" ? item.quantity : parseFloat(item.quantity) || 1,
+    unit: item.unit || "ea",
     is_discount: item.is_discount || false,
     is_food: item.is_food !== undefined ? item.is_food : true,
     confidence: typeof item.confidence === "number" ? item.confidence : 0.5,

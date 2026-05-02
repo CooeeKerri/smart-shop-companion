@@ -1,3 +1,5 @@
+import heic2any from 'heic2any';
+
 /**
  * Client-side receipt image preprocessing.
  * Runs canvas operations to improve OCR accuracy before upload.
@@ -15,6 +17,24 @@ interface PreprocessResult {
   file: File;
   preview: string;
   quality: QualityResult;
+}
+
+const isHeicFile = (file: File) =>
+  /image\/(heic|heif)/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  if (!isHeicFile(file)) return file;
+
+  const converted = await heic2any({
+    blob: file,
+    toType: 'image/jpeg',
+    quality: 0.92,
+  });
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+
+  return new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+    type: 'image/jpeg',
+  });
 }
 
 /**
@@ -213,6 +233,8 @@ function toGrayscale(data: Uint8ClampedArray): void {
  * Returns a processed File + preview, or quality rejection.
  */
 export async function preprocessReceiptImage(file: File): Promise<PreprocessResult> {
+  const workingFile = await convertHeicToJpeg(file);
+
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -228,8 +250,8 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       // Reject very small images (likely cropped/incomplete)
       if (width < 200 || height < 300) {
         resolve({
-          file,
-          preview: URL.createObjectURL(file),
+          file: workingFile,
+          preview: URL.createObjectURL(workingFile),
           quality: {
             ok: false,
             message: "This image is too small — it may be cropped or incomplete. Please retake the receipt photo with the full receipt visible.",
@@ -252,15 +274,6 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       // Step 1: Analyse quality on original
       const originalData = ctx.getImageData(0, 0, width, height);
       const quality = analyseQuality(originalData);
-
-      if (!quality.ok) {
-        resolve({
-          file,
-          preview: URL.createObjectURL(file),
-          quality,
-        });
-        return;
-      }
 
       // Step 2: Shadow reduction
       const imageData = ctx.getImageData(0, 0, width, height);

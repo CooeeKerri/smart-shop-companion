@@ -102,6 +102,14 @@ const Scan = () => {
       );
     } catch (err) {
       console.error('Preprocessing error:', err);
+      if (/image\/(heic|heif)/i.test(file.type) || /\.(heic|heif)$/i.test(file.name)) {
+        toast({
+          title: 'Couldn’t read that iPhone photo',
+          description: 'Please try again, or choose the photo after it has finished saving on your phone.',
+          variant: 'destructive',
+        });
+        return;
+      }
       // Fallback: use original image
       const reader = new FileReader();
       reader.onloadend = () => {

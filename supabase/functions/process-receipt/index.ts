@@ -70,8 +70,7 @@ Deno.serve(async (req) => {
 
     if (extractionResult.ok) {
       const parsed = extractionResult.data!;
-      validated = validateReceipt(parsed, detectStore(parsed));
-      validated.extraction_method = "vision_direct";
+      validated = { ...validateReceipt(parsed, detectStore(parsed)), extraction_method: "vision_direct" };
     } else if (extractionResult.status === 429 || extractionResult.status === 402) {
       return new Response(
         JSON.stringify({ error: extractionResult.error }),
@@ -83,8 +82,7 @@ Deno.serve(async (req) => {
     if (!validated || shouldRunFallback(validated)) {
       const fallback = await runOcrTextFallback(imageContents, LOVABLE_API_KEY);
       if (fallback.ok) {
-        const fallbackValidated = validateReceipt(fallback.data!, detectStore(fallback.data!));
-        fallbackValidated.extraction_method = "ocr_text_fallback";
+        const fallbackValidated = { ...validateReceipt(fallback.data!, detectStore(fallback.data!)), extraction_method: "ocr_text_fallback" };
         validated = chooseBestExtraction(validated, fallbackValidated);
       } else if (!validated) {
         return new Response(

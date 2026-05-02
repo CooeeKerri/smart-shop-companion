@@ -32,6 +32,21 @@ interface PendingReceipt {
   status: string;
 }
 
+interface ScanLimitResult {
+  allowed?: boolean;
+}
+
+interface ProcessReceiptResult {
+  rejected?: boolean;
+  message?: string;
+  needs_review?: boolean;
+}
+
+interface ReceiptImageUpdate {
+  image_url: string;
+  image_paths: string[];
+}
+
 const Scan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -168,7 +183,7 @@ const Scan = () => {
     if (!isPremium) {
       for (let i = 0; i < docketsWithImages.length; i++) {
         const { data } = await supabase.rpc('check_and_increment_scan');
-        const d = data as any;
+        const d = data as ScanLimitResult | null;
         if (!d?.allowed) {
           toast({
             title: 'Scan limit reached',
@@ -225,11 +240,11 @@ const Scan = () => {
         // 3. Update receipt with image paths
         await supabase
           .from('receipts')
-          .update({ image_url: imagePaths[0], image_paths: imagePaths } as any)
+          .update({ image_url: imagePaths[0], image_paths: imagePaths } as ReceiptImageUpdate)
           .eq('id', receipt.id);
 
         // 4. Call OCR (with server-side quality gate)
-        const { data: ocrData, error: ocrError } = await supabase.functions.invoke(
+        const { data: ocrData, error: ocrError } = await supabase.functions.invoke<ProcessReceiptResult>(
           'process-receipt',
           { body: { receipt_id: receipt.id, image_paths: imagePaths } }
         );
@@ -278,11 +293,12 @@ const Scan = () => {
         // Some scans need review
         navigate('/review', { state: { receiptIds } });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Processing error:', err);
+      const message = err instanceof Error ? err.message : 'Something went wrong';
       toast({
         title: 'Error processing receipts',
-        description: err.message || 'Something went wrong',
+        description: message,
         variant: 'destructive',
       });
       // If some succeeded, still allow review

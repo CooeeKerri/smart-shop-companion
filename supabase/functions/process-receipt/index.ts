@@ -61,24 +61,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── PASS 0: Server-side quality gate ──
-    const qualityCheck = await runQualityCheck(imageContents, LOVABLE_API_KEY);
-    if (!qualityCheck.ok) {
-      // Update receipt status so user knows to re-scan
-      await supabase
-        .from("receipts")
-        .update({ status: "rejected", raw_ocr_text: JSON.stringify({ rejection: qualityCheck.reason }) })
-        .eq("id", receipt_id);
-
-      return new Response(
-        JSON.stringify({
-          error: "image_quality",
-          message: qualityCheck.reason,
-          rejected: true,
-        }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Quality gate removed — we trust Gemini to read most photos and only
+    // surface a problem if extraction itself fails or returns nothing usable.
 
     // ── PASS 1: Extract with store-specific template ──
     // First do a quick store detection from the images, then use a tailored prompt

@@ -17,6 +17,7 @@ import { preprocessReceiptImage } from '@/lib/receiptPreprocess';
 interface ScannedImage {
   id: string;
   file: File;
+  originalFile: File;
   preview: string;
 }
 
@@ -46,6 +47,8 @@ interface ProcessReceiptResult {
 interface ReceiptImageUpdate {
   image_url: string;
   image_paths: string[];
+  original_image_url?: string;
+  original_image_paths?: string[];
 }
 
 const Scan = () => {
@@ -112,7 +115,7 @@ const Scan = () => {
       setDockets((prev) =>
         prev.map((d, i) =>
           i === activeDocketIdx
-            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file: result.file, preview: result.preview }] }
+            ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file: result.file, originalFile: result.originalFile, preview: result.preview }] }
             : d
         )
       );
@@ -132,7 +135,7 @@ const Scan = () => {
         setDockets((prev) =>
           prev.map((d, i) =>
             i === activeDocketIdx
-              ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, preview: reader.result as string }] }
+              ? { ...d, images: [...d.images, { id: crypto.randomUUID(), file, originalFile: file, preview: reader.result as string }] }
               : d
           )
         );
@@ -180,26 +183,9 @@ const Scan = () => {
       return;
     }
 
-    // Increment scan counter for each docket
-    if (!isPremium) {
-      for (let i = 0; i < docketsWithImages.length; i++) {
-        const { data } = await supabase.rpc('check_and_increment_scan');
-        const d = data as ScanLimitResult | null;
-        if (!d?.allowed) {
-          toast({
-            title: 'Scan limit reached',
-            description: 'Upgrade to Premium for unlimited scans.',
-            variant: 'destructive',
-          });
-          return;
-        }
-      }
-    }
-
     setProcessing(true);
 
     const receiptIds: string[] = [];
-    let needsReviewCount = 0;
 
     try {
       setProcessingProgress({ current: 0, total: docketsWithImages.length });
@@ -207,6 +193,22 @@ const Scan = () => {
       for (let dIdx = 0; dIdx < docketsWithImages.length; dIdx++) {
         const docket = docketsWithImages[dIdx];
         setProcessingProgress({ current: dIdx + 1, total: docketsWithImages.length });
+
+        // Reserve a scan slot per docket (for free users) — refund on failure.
+        let scanReserved = false;
+        if (!isPremium) {
+          const { data } = await supabase.rpc('check_and_increment_scan');
+          const d = data as ScanLimitResult | null;
+          if (!d?.allowed) {
+            toast({
+              title: 'Scan limit reached',
+              description: 'Upgrade to Premium for unlimited scans.',
+              variant: 'destructive',
+            });
+            break;
+          }
+          scanReserved = true;
+        }
 
         // 1. Create receipt record
         const { data: receipt, error: receiptError } = await supabase
@@ -216,46 +218,91 @@ const Scan = () => {
           .single();
 
         if (receiptError || !receipt) {
+          if (scanReserved) await supabase.rpc('refund_scan');
+          await supabase.from('scan_errors').insert({
+            user_id: user.id,
+            error_type: 'create_receipt_failed',
+            error_message: receiptError?.message ?? 'unknown',
+          });
           throw new Error(`Failed to create receipt ${dIdx + 1}`);
+        }
+
+        // 2. Upload BOTH the original photo (canonical) and the processed photo (optional, used by OCR).
+        const originalPaths: string[] = [];
+        const processedPaths: string[] = [];
+        try {
+          for (let i = 0; i < docket.images.length; i++) {
+            const img = docket.images[i];
+            const origExt = img.originalFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+            const origPath = `${user.id}/${receipt.id}_${i + 1}_original.${origExt}`;
+            const procPath = `${user.id}/${receipt.id}_${i + 1}_processed.jpg`;
+
+            const origUp = await supabase.storage.from('receipts').upload(origPath, img.originalFile);
+            if (origUp.error) throw new Error(`Failed to upload original image ${i + 1}`);
+            originalPaths.push(origPath);
+
+            // Processed is optional — only upload if it actually differs from the original
+            if (img.file !== img.originalFile) {
+              const procUp = await supabase.storage.from('receipts').upload(procPath, img.file);
+              if (!procUp.error) processedPaths.push(procPath);
+              else processedPaths.push(origPath); // fall back to original
+            } else {
+              processedPaths.push(origPath);
+            }
+          }
+        } catch (uploadErr) {
+          if (scanReserved) await supabase.rpc('refund_scan');
+          await supabase.from('receipts').delete().eq('id', receipt.id);
+          await supabase.from('scan_errors').insert({
+            user_id: user.id,
+            receipt_id: receipt.id,
+            error_type: 'image_upload_failed',
+            error_message: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          });
+          throw uploadErr;
         }
 
         receiptIds.push(receipt.id);
 
-        // 2. Upload images
-        const imagePaths: string[] = [];
-        for (let i = 0; i < docket.images.length; i++) {
-          const img = docket.images[i];
-          const ext = img.file.type === 'image/jpeg' ? 'jpg' : (img.file.name.split('.').pop() || 'jpg');
-          const storagePath = `${user.id}/${receipt.id}_${i + 1}.${ext}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('receipts')
-            .upload(storagePath, img.file);
-
-          if (uploadError) {
-            throw new Error(`Failed to upload image ${i + 1} of docket ${dIdx + 1}`);
-          }
-          imagePaths.push(storagePath);
-        }
-
-        // 3. Update receipt with image paths
+        // 3. Update receipt with image paths (originals are canonical for display)
         await supabase
           .from('receipts')
-          .update({ image_url: imagePaths[0], image_paths: imagePaths } as ReceiptImageUpdate)
+          .update({
+            image_url: originalPaths[0],
+            image_paths: originalPaths,
+            original_image_url: originalPaths[0],
+            original_image_paths: originalPaths,
+          } as ReceiptImageUpdate)
           .eq('id', receipt.id);
 
         // 4. Call OCR (with server-side quality gate)
+        // We send processed paths to OCR for best legibility; storage still keeps originals.
         const { data: ocrData, error: ocrError } = await supabase.functions.invoke<ProcessReceiptResult>(
           'process-receipt',
-          { body: { receipt_id: receipt.id, image_paths: imagePaths } }
+          { body: { receipt_id: receipt.id, image_paths: processedPaths } }
         );
 
         if (ocrError) {
           console.error(`OCR error for docket ${dIdx + 1}:`, ocrError);
+          if (scanReserved) await supabase.rpc('refund_scan');
+          await supabase.from('scan_errors').insert({
+            user_id: user.id,
+            receipt_id: receipt.id,
+            error_type: 'ocr_invoke_error',
+            error_message: ocrError.message,
+          });
           throw new Error(ocrError.message || `Could not read docket ${dIdx + 1}`);
         }
 
         if (ocrData?.error) {
+          if (scanReserved) await supabase.rpc('refund_scan');
+          await supabase.from('scan_errors').insert({
+            user_id: user.id,
+            receipt_id: receipt.id,
+            error_type: 'ocr_returned_error',
+            error_message: ocrData.error,
+            raw_response: JSON.stringify(ocrData),
+          });
           throw new Error(ocrData.error);
         }
 
@@ -267,15 +314,11 @@ const Scan = () => {
             variant: 'destructive',
             duration: 8000,
           });
+          if (scanReserved) await supabase.rpc('refund_scan');
           // Clean up the rejected receipt
           await supabase.from('receipts').delete().eq('id', receipt.id);
           receiptIds.pop();
           continue;
-        }
-
-        // Track if any receipt needs review
-        if (ocrData?.needs_review) {
-          needsReviewCount++;
         }
       }
 
@@ -284,21 +327,8 @@ const Scan = () => {
         return;
       }
 
-      // Route based on confidence: skip review for high-confidence scans
-      if (needsReviewCount === 0) {
-        // All scans high confidence — auto-confirm and go to analysis
-        for (const id of receiptIds) {
-          await supabase
-            .from('receipts')
-            .update({ status: 'confirmed' })
-            .eq('id', id);
-        }
-        toast({ title: `${receiptIds.length === 1 ? 'Docket' : `${receiptIds.length} dockets`} confirmed automatically`, description: 'High confidence scan — no review needed.' });
-        navigate('/analysis', { state: { receiptIds } });
-      } else {
-        // Some scans need review
-        navigate('/review', { state: { receiptIds } });
-      }
+      // Always send the user to the review screen — they confirm before we save.
+      navigate('/review', { state: { receiptIds } });
     } catch (err: unknown) {
       console.error('Processing error:', err);
       const message = err instanceof Error ? err.message : 'Something went wrong';

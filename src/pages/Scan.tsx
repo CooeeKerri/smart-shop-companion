@@ -37,6 +37,7 @@ interface ScanLimitResult {
 }
 
 interface ProcessReceiptResult {
+  error?: string;
   rejected?: boolean;
   message?: string;
   needs_review?: boolean;

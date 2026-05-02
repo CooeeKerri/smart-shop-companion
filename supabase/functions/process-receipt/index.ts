@@ -917,6 +917,23 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
   };
 }
 
+function shouldRunFallback(data: any): boolean {
+  return !data ||
+    data.items.length < 3 ||
+    data.item_extraction_confidence < 0.7 ||
+    data.total_confidence < 0.6 ||
+    data.store_name === "Unknown Store";
+}
+
+function chooseBestExtraction(primary: any | null, fallback: any) {
+  if (!primary) return fallback;
+
+  const primaryScore = primary.items.length * 0.08 + primary.overall_confidence + primary.total_confidence * 0.4;
+  const fallbackScore = fallback.items.length * 0.08 + fallback.overall_confidence + fallback.total_confidence * 0.4;
+
+  return fallbackScore > primaryScore + 0.15 ? fallback : primary;
+}
+
 // ── Save to database ──
 async function saveReceipt(supabase: any, receiptId: string, data: any) {
   // Update receipt metadata
@@ -934,6 +951,7 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
       receipt_time: data.receipt_time,
       raw_ocr_text: JSON.stringify({
         warnings: data.warnings,
+        extraction_method: data.extraction_method,
         date_confidence: data.date_confidence,
         total_confidence: data.total_confidence,
         item_extraction_confidence: data.item_extraction_confidence,

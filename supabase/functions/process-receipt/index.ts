@@ -459,6 +459,62 @@ FINAL CHECK: Review your output. Every item must be a real product. No totals, n
   }
 }
 
+async function runOcrTextFallback(
+  images: { base64: string; mimeType: string }[],
+  apiKey: string
+) {
+  const textResult = await transcribeDocketText(images, apiKey);
+  if (!textResult.ok) return textResult;
+  const transcribedText = textResult.text.trim();
+
+  if (transcribedText.replace(/\s+/g, " ").length < 40) {
+    return { ok: false, status: 422, error: "The docket text could not be read clearly enough." } as const;
+  }
+
+  return parseTranscribedDocketText(transcribedText, apiKey);
+}
+
+async function transcribeDocketText(
+  images: { base64: string; mimeType: string }[],
+  apiKey: string
+) {
+  const messageContent: any[] = images.map((img) => ({
+    type: "image_url",
+    image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
+  }));
+
+  messageContent.push({
+    type: "text",
+    text: `Read this Australian grocery docket as accurately as possible.
+
+Return plain text only. Preserve the original line order, product abbreviations, prices, totals, date/time, ABN, and store header. If the docket is split across multiple photos, combine the sections in top-to-bottom order and avoid duplicating overlapping lines.`,
+  });
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-pro",
+      messages: [{ role: "user", content: messageContent }],
+      temperature: 0,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("OCR fallback transcription error:", response.status, errText);
+    if (response.status === 429) return { ok: false, status: 429, error: "Rate limit exceeded. Please try again shortly." } as const;
+    if (response.status === 402) return { ok: false, status: 402, error: "AI credits exhausted." } as const;
+    return { ok: false, status: 500, error: "Fallback docket reading failed" } as const;
+  }
+
+  const result = await response.json();
+  return { ok: true, text: result.choices?.[0]?.message?.content ?? "" } as const;
+}
+
 // ── Australian Store Database ──
 const KNOWN_STORES = [
   {

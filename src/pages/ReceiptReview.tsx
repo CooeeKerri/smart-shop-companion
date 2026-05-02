@@ -251,6 +251,9 @@ const ReceiptReview = () => {
   const handleConfirm = async () => {
     setSaving(true);
     try {
+      // Capture user once for alias inserts
+      const { data: { user } } = await supabase.auth.getUser();
+
       for (const docket of dockets) {
         await supabase
           .from('receipts')
@@ -273,6 +276,21 @@ const ReceiptReview = () => {
               is_discount: item.is_discount,
             })
             .eq('id', item.id);
+
+          // Learn from manual edits: if the user changed the cleaned name (or
+          // the category) away from what the AI produced, save it as an alias
+          // so future receipts from this store benefit.
+          const aiClean = (item.raw_name || '').trim();
+          const userClean = (item.clean_name || '').trim();
+          if (user && item.raw_name && userClean && userClean.toLowerCase() !== aiClean.toLowerCase()) {
+            await supabase.from('product_aliases').upsert({
+              user_id: user.id,
+              store_name: docket.storeName,
+              raw_text: item.raw_name,
+              cleaned_name: userClean,
+              category: item.category,
+            }, { onConflict: 'user_id,store_name,raw_text' });
+          }
         }
       }
 
@@ -320,6 +338,15 @@ const ReceiptReview = () => {
       </div>
 
       <div className="px-4 space-y-3">
+        {/* Friendly intro — every scan must pass through here */}
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-3">
+            <p className="text-sm font-medium text-foreground">
+              I’ve read your docket. Please check your shop before I save it.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Why review is needed */}
         {uniqueReasons.length > 0 && (
           <Card className="border-warning/40 bg-warning/5">

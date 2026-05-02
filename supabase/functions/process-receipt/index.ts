@@ -67,6 +67,8 @@ Deno.serve(async (req) => {
     // ── PASS 1: Extract directly from the optimised docket photo(s) ──
     const extractionResult = await runExtraction(imageContents, LOVABLE_API_KEY);
     let validated: any = null;
+    let rawTranscribedText: string | null = null;
+    const rawExtractionPayload: any = { pass1: extractionResult.ok ? extractionResult.data : { error: extractionResult.error } };
 
     if (extractionResult.ok) {
       const parsed = extractionResult.data!;
@@ -80,7 +82,13 @@ Deno.serve(async (req) => {
 
     // ── PASS 2: If the direct read looks weak, transcribe text first then parse that text ──
     if (!validated || shouldRunFallback(validated)) {
-      const fallback = await runOcrTextFallback(imageContents, LOVABLE_API_KEY);
+      const transcript = await transcribeDocketText(imageContents, LOVABLE_API_KEY);
+      if (transcript.ok) {
+        rawTranscribedText = transcript.text || null;
+        rawExtractionPayload.transcript = rawTranscribedText;
+      }
+      const fallback = await runOcrTextFallback(imageContents, LOVABLE_API_KEY, transcript.ok ? transcript.text : undefined);
+      rawExtractionPayload.pass2 = fallback.ok ? fallback.data : { error: fallback.error };
       if (fallback.ok) {
         const fallbackValidated = { ...validateReceipt(fallback.data!, detectStore(fallback.data!)), extraction_method: "ocr_text_fallback" };
         validated = chooseBestExtraction(validated, fallbackValidated);
@@ -93,7 +101,7 @@ Deno.serve(async (req) => {
     }
 
     // Save to database
-    await saveReceipt(supabase, receipt_id, validated);
+    await saveReceipt(supabase, receipt_id, validated, rawTranscribedText, rawExtractionPayload);
 
     return new Response(
       JSON.stringify({
@@ -399,6 +407,7 @@ Return ONLY valid JSON (no markdown fences):
       "category": "Meat & Seafood",
       "price": 7.50,
       "quantity": 1,
+      "unit": "ea",
       "is_discount": false,
       "is_food": true,
       "confidence": 0.9
@@ -408,6 +417,10 @@ Return ONLY valid JSON (no markdown fences):
   "total_discounts": -3.20,
   "total": 39.30
 }
+
+UNIT RULES:
+- For weighted items (meat, deli, produce sold by weight) use "kg" and put the weight as quantity (e.g. 0.456kg of bananas → quantity: 0.456, unit: "kg").
+- For everything else use "ea" with integer quantity.
 
 INGREDIENT_KEYWORD RULES:
 - Extract the core grocery ingredient, lowercase, no brand, no size, no packaging.
@@ -459,11 +472,15 @@ FINAL CHECK: Review your output. Every item must be a real product. No totals, n
 
 async function runOcrTextFallback(
   images: { base64: string; mimeType: string }[],
-  apiKey: string
+  apiKey: string,
+  precomputedText?: string
 ) {
-  const textResult = await transcribeDocketText(images, apiKey);
-  if (!textResult.ok) return textResult;
-  const transcribedText = textResult.text.trim();
+  let transcribedText = precomputedText?.trim() ?? "";
+  if (!transcribedText) {
+    const textResult = await transcribeDocketText(images, apiKey);
+    if (!textResult.ok) return textResult;
+    transcribedText = textResult.text.trim();
+  }
 
   if (transcribedText.replace(/\s+/g, " ").length < 40) {
     return { ok: false, status: 422, error: "The docket text could not be read clearly enough." } as const;
@@ -782,7 +799,8 @@ function validateReceipt(parsed: any, storeDetection: StoreDetection) {
     ingredient_keyword: item.ingredient_keyword || null,
     category: item.category || "Other",
     price: typeof item.price === "number" ? item.price : parseFloat(item.price) || 0,
-    quantity: item.quantity || 1,
+    quantity: typeof item.quantity === "number" ? item.quantity : parseFloat(item.quantity) || 1,
+    unit: item.unit || "ea",
     is_discount: item.is_discount || false,
     is_food: item.is_food !== undefined ? item.is_food : true,
     confidence: typeof item.confidence === "number" ? item.confidence : 0.5,
@@ -933,7 +951,13 @@ function chooseBestExtraction(primary: any | null, fallback: any) {
 }
 
 // ── Save to database ──
-async function saveReceipt(supabase: any, receiptId: string, data: any) {
+async function saveReceipt(
+  supabase: any,
+  receiptId: string,
+  data: any,
+  rawText: string | null,
+  rawExtractionPayload: any
+) {
   // Update receipt metadata
   await supabase
     .from("receipts")
@@ -947,15 +971,30 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
       total_discounts: data.total_discounts,
       overall_confidence: data.overall_confidence,
       receipt_time: data.receipt_time,
-      raw_ocr_text: JSON.stringify({
+      // Store the actual transcribed text from the docket for debugging/aliases.
+      // If transcription wasn't run, fall back to a serialized debug blob.
+      raw_ocr_text: rawText && rawText.length > 0
+        ? rawText
+        : JSON.stringify({
+            warnings: data.warnings,
+            extraction_method: data.extraction_method,
+            date_confidence: data.date_confidence,
+            total_confidence: data.total_confidence,
+            item_extraction_confidence: data.item_extraction_confidence,
+            needs_review: data.needs_review,
+          }),
+      raw_extraction_json: {
         warnings: data.warnings,
         extraction_method: data.extraction_method,
         date_confidence: data.date_confidence,
         total_confidence: data.total_confidence,
         item_extraction_confidence: data.item_extraction_confidence,
         needs_review: data.needs_review,
-      }),
-      status: data.needs_review ? "needs_review" : "reviewed",
+        passes: rawExtractionPayload,
+      },
+      extraction_method: data.extraction_method,
+      // Always send the user to review — never auto-confirm from the edge function.
+      status: "needs_review",
       ...(data.receipt_date ? { shop_date: data.receipt_date } : {}),
     })
     .eq("id", receiptId);
@@ -969,6 +1008,7 @@ async function saveReceipt(supabase: any, receiptId: string, data: any) {
     category: item.category,
     price: item.price,
     quantity: item.quantity,
+    unit: item.unit ?? null,
     is_discount: item.is_discount,
     is_food: item.is_food,
     confidence: item.confidence,

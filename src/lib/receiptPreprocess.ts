@@ -15,6 +15,7 @@ interface QualityResult {
 
 interface PreprocessResult {
   file: File;
+  originalFile: File;
   preview: string;
   quality: QualityResult;
 }
@@ -251,6 +252,7 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       if (width < 200 || height < 300) {
         resolve({
           file: workingFile,
+          originalFile: workingFile,
           preview: URL.createObjectURL(workingFile),
           quality: {
             ok: false,
@@ -297,7 +299,7 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            resolve({ file: workingFile, preview: URL.createObjectURL(workingFile), quality });
+            resolve({ file: workingFile, originalFile: workingFile, preview: URL.createObjectURL(workingFile), quality });
             return;
           }
 
@@ -309,6 +311,7 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
 
           resolve({
             file: processedFile,
+            originalFile: workingFile,
             preview,
             quality: { ...quality, ok: true },
           });
@@ -321,6 +324,7 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
     img.onerror = () => {
       resolve({
         file: workingFile,
+        originalFile: workingFile,
         preview: URL.createObjectURL(workingFile),
         quality: {
           ok: false,

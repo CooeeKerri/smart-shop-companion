@@ -297,11 +297,11 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       canvas.toBlob(
         (blob) => {
           if (!blob) {
-            resolve({ file, preview: URL.createObjectURL(file), quality });
+            resolve({ file: workingFile, preview: URL.createObjectURL(workingFile), quality });
             return;
           }
 
-          const processedFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
+          const processedFile = new File([blob], workingFile.name.replace(/\.\w+$/, '.jpg'), {
             type: 'image/jpeg',
           });
 
@@ -320,8 +320,8 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
 
     img.onerror = () => {
       resolve({
-        file,
-        preview: URL.createObjectURL(file),
+        file: workingFile,
+        preview: URL.createObjectURL(workingFile),
         quality: {
           ok: false,
           message: "Could not read this image file. Please try a different photo.",
@@ -332,6 +332,6 @@ export async function preprocessReceiptImage(file: File): Promise<PreprocessResu
       });
     };
 
-    img.src = URL.createObjectURL(file);
+    img.src = URL.createObjectURL(workingFile);
   });
 }

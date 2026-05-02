@@ -492,6 +492,7 @@ export type Database = {
     Functions: {
       check_and_increment_scan: { Args: never; Returns: Json }
       get_subscription_info: { Args: never; Returns: Json }
+      refund_scan: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
